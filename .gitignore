@@ -1,0 +1,3 @@
+vivado_project/
+*.log
+vitis_project/
