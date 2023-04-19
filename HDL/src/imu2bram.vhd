@@ -38,7 +38,7 @@ entity imu2bram is
            new_data     : in STD_LOGIC;
            addr_imu     : in STD_LOGIC_VECTOR (7 downto 0);
            data_imu     : in STD_LOGIC_VECTOR (7 downto 0);
-           we           : out STD_LOGIC_VECTOR(1 downto 0);
+           we           : out STD_LOGIC_VECTOR(1 downto 0) := (others => '0');
            data_bram    : out STD_LOGIC_VECTOR (15 downto 0);
            addr_bram    : out STD_LOGIC_VECTOR (bram_addr_width - 1 downto 0)
            );
@@ -55,7 +55,8 @@ architecture Behavioral of imu2bram is
     signal addr_imu_reg     : STD_LOGIC_VECTOR (addr_imu'high downto addr_imu'low);
     
     signal addr_bram_temp   : STD_LOGIC_VECTOR (addr_bram'high downto addr_bram'low);
-    signal data_bram_temp   : STD_LOGIC_VECTOR (data_bram'high downto data_bram'low); 
+    signal data_bram_temp   : STD_LOGIC_VECTOR (data_bram'high downto data_bram'low);
+    signal data_bram_int    : STD_LOGIC_VECTOR (data_bram'high downto data_bram'low); 
     signal we_temp          : STD_LOGIC_VECTOR (we'high downto we'low);
    
     constant acc_x_addr     : STD_LOGIC_VECTOR (addr_bram'high downto addr_bram'low) := STD_LOGIC_VECTOR(to_unsigned(0, addr_bram'length));
@@ -87,6 +88,8 @@ begin
 --    x"39", --TEMP_OUT_H
 --    x"3A", --TEMP_OUT_L
 
+    data_bram <= data_bram_int;
+
     process(clk)
     begin
         if rising_edge(clk) then
@@ -100,7 +103,7 @@ begin
                 end if;
             when SET =>
                 addr_bram  <= addr_bram_temp;
-                data_bram  <= data_bram_temp;
+                data_bram_int  <= data_bram_temp;
                 we         <= we_temp;
                 
                 current_state <= RESET;
@@ -116,7 +119,7 @@ begin
         end if;
     end process;
     
-    ram_addr : process(addr_imu_reg, data_imu_reg)
+    ram_addr : process(addr_imu_reg, data_imu_reg, data_bram_int)
     begin
         case addr_imu_reg is
             when x"00" => --WHO AM I?
@@ -127,72 +130,72 @@ begin
             when x"2D" => --ACCEL_XOUT_H
                 addr_bram_temp <= acc_x_addr;
                 data_bram_temp <= data_imu_reg & padding;
-                we_temp <= "10";
+                we_temp <= "00";
                 
             when x"2E" => --ACCEL_XOUT_L
                 addr_bram_temp <= acc_x_addr;
-                data_bram_temp <= padding & data_imu_reg;
-                we_temp <= "01";
+                data_bram_temp <= data_bram_int(data_bram'high downto 8) & data_imu_reg;
+                we_temp <= "11";
                 
             when x"2F" => --ACCEL_YOUT_H
                 addr_bram_temp <= acc_y_addr;
                 data_bram_temp <= data_imu_reg & padding;
-                we_temp <= "10";
+                we_temp <= "00";
                 
             when x"30" => --ACCEL_YOUT_L
                 addr_bram_temp <= acc_y_addr;
-                data_bram_temp <= padding & data_imu_reg;
-                we_temp <= "01";
+                data_bram_temp <= data_bram_int(data_bram'high downto 8) & data_imu_reg;
+                we_temp <= "11";
                 
             when x"31" => --ACCEL_ZOUT_H
                 addr_bram_temp <= acc_z_addr;
                 data_bram_temp <= data_imu_reg & padding;
-                we_temp <= "10";
+                we_temp <= "00";
                 
             when x"32" => --ACCEL_ZOUT_L
                 addr_bram_temp <= acc_z_addr;
-                data_bram_temp <= padding & data_imu_reg;
-                we_temp <= "01";
+                data_bram_temp <= data_bram_int(data_bram'high downto 8) & data_imu_reg;
+                we_temp <= "11";
                 
             when x"33" => --GYRO_XOUT_H
                 addr_bram_temp <= gyro_x_addr;
                 data_bram_temp <= data_imu_reg & padding;
-                we_temp <= "10";
+                we_temp <= "00";
                 
             when x"34" => --GYRO_XOUT_L
                 addr_bram_temp <= gyro_x_addr;
-                data_bram_temp <= padding & data_imu_reg;
-                we_temp <= "01";
+                data_bram_temp <= data_bram_int(data_bram'high downto 8) & data_imu_reg;
+                we_temp <= "11";
                 
             when x"35" => --GYRO_YOUT_H
                 addr_bram_temp <= gyro_y_addr;
                 data_bram_temp <= data_imu_reg & padding;
-                we_temp <= "10";
+                we_temp <= "00";
                 
             when x"36" => --GYRO_YOUT_L
                 addr_bram_temp <= gyro_y_addr;
-                data_bram_temp <= padding & data_imu_reg;
-                we_temp <= "01";
+                data_bram_temp <= data_bram_int(data_bram'high downto 8) & data_imu_reg;
+                we_temp <= "11";
                 
             when x"37" => --GYRO_ZOUT_H
                 addr_bram_temp <= gyro_z_addr;
                 data_bram_temp <= data_imu_reg & padding;
-                we_temp <= "10";
+                we_temp <= "00";
                 
             when x"38" => --GYRO_ZOUT_L
                 addr_bram_temp <= gyro_z_addr;
-                data_bram_temp <= padding & data_imu_reg;
-                we_temp <= "01";
+                data_bram_temp <= data_bram_int(data_bram'high downto 8) & data_imu_reg;
+                we_temp <= "11";
                 
             when x"39" => --TEMP_OUT_H
                 addr_bram_temp <= temp_addr;
                 data_bram_temp <= data_imu_reg & padding;
-                we_temp <= "10";
+                we_temp <= "00";
                 
             when x"3A" => --TEMP_OUT_L
                 addr_bram_temp <= temp_addr;
-                data_bram_temp <= padding & data_imu_reg;
-                we_temp <= "01";
+                data_bram_temp <= data_bram_int(data_bram'high downto 8) & data_imu_reg;
+                we_temp <= "11";
                 
             when others =>
                 null;

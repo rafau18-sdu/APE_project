@@ -29,8 +29,8 @@ use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+library UNISIM;
+use UNISIM.VComponents.all;
 
 entity clk_divider is
     Generic ( base_freq : integer := 125000000;
@@ -65,6 +65,11 @@ begin
              end if;
          end if;
      end process;
-  clk_div<=clk_temp;
+     
+     BUFG_inst : BUFG
+   port map (
+      O => clk_div, -- 1-bit output: Clock output
+      I => clk_temp  -- 1-bit input: Clock input
+   );
 
 end Behavioral;

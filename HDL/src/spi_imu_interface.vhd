@@ -34,8 +34,12 @@ use IEEE.NUMERIC_STD.ALL;
 entity spi_imu_interface is
     Port ( clk          : in STD_LOGIC;
            rst          : in STD_LOGIC;
+           
+           --read_flag    : in STD_LOGIC;
            --access_flag : in STD_LOGIC;
            addr         : in STD_LOGIC_VECTOR (7 downto 0);
+           message      : in STD_LOGIC_VECTOR (15 downto 0);
+           
            addr_out     : out STD_LOGIC_VECTOR (7 downto 0);
            data         : out STD_LOGIC_VECTOR (7 downto 0);
            data_ready   : out STD_LOGIC;
@@ -236,7 +240,7 @@ begin
          SCLK<='1';
          cs<= '0';  
       WHEN s4 =>
-         SCLK<= not clk;
+         SCLK<= clk;
          cs<= '0';  
       WHEN s5 =>
          SCLK<='1';

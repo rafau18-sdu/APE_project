@@ -69,10 +69,9 @@ begin
             if (inc = '1' and old_inc = '0')then
                  addr_cnt <= addr_cnt + 1;
             end if;
+        
+            old_inc <= inc;
         end if;
-        
-        old_inc <= inc;
-        
     end process;
 
 

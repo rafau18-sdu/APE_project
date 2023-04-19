@@ -42,7 +42,8 @@ entity ps_bram_addr_fix is
            addr_out : out STD_LOGIC_VECTOR (31 downto 0);
            data_out : out STD_LOGIC_VECTOR (31 downto 0);
            we_out   : out STD_LOGIC_VECTOR (3 downto 0);
-           en_out   : out STD_LOGIC
+           en_out   : out STD_LOGIC;
+           rst_out  : out STD_LOGIC
            );
 end ps_bram_addr_fix;
 
@@ -59,5 +60,6 @@ begin
     data_out <= data_padding & data_in;
     we_out <= we_padding & we_in;
     en_out <= '1';
+    rst_out <= '0';
     
 end Behavioral;

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="TB_imu_logic_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="TB_imu_logic" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="12.412400 us"></ZoomStartTime>
+      <ZoomEndTime time="142.212401 us"></ZoomEndTime>
+      <Cursor1Time time="72.412400 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="227"></NameColumnWidth>
+      <ValueColumnWidth column_width="277"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="16" />
+   <wvobject type="array" fp_name="/TB_imu_logic/addr_bram">
+      <obj_property name="ElementShortName">addr_bram[12:0]</obj_property>
+      <obj_property name="ObjectShortName">addr_bram[12:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/TB_imu_logic/ck_miso">
+      <obj_property name="ElementShortName">ck_miso</obj_property>
+      <obj_property name="ObjectShortName">ck_miso</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/TB_imu_logic/ck_mosi">
+      <obj_property name="ElementShortName">ck_mosi</obj_property>
+      <obj_property name="ObjectShortName">ck_mosi</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/TB_imu_logic/ck_sck">
+      <obj_property name="ElementShortName">ck_sck</obj_property>
+      <obj_property name="ObjectShortName">ck_sck</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/TB_imu_logic/ck_ss">
+      <obj_property name="ElementShortName">ck_ss</obj_property>
+      <obj_property name="ObjectShortName">ck_ss</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/TB_imu_logic/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/TB_imu_logic/data_bram">
+      <obj_property name="ElementShortName">data_bram[15:0]</obj_property>
+      <obj_property name="ObjectShortName">data_bram[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/TB_imu_logic/rst">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/TB_imu_logic/we">
+      <obj_property name="ElementShortName">we[1:0]</obj_property>
+      <obj_property name="ObjectShortName">we[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/TB_imu_logic/dut/imu_logic_i/spi_imu_interface_0/data_ready">
+      <obj_property name="ElementShortName">data_ready</obj_property>
+      <obj_property name="ObjectShortName">data_ready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/TB_imu_logic/dut/imu_logic_i/spi_imu_interface_0/U0/conf_flag">
+      <obj_property name="ElementShortName">conf_flag</obj_property>
+      <obj_property name="ObjectShortName">conf_flag</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/TB_imu_logic/dut/imu_logic_i/spi_imu_interface_0/U0/current_state">
+      <obj_property name="ElementShortName">current_state</obj_property>
+      <obj_property name="ObjectShortName">current_state</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/TB_imu_logic/dut/imu_logic_i/spi_imu_interface_0/U0/next_state">
+      <obj_property name="ElementShortName">next_state</obj_property>
+      <obj_property name="ObjectShortName">next_state</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/TB_imu_logic/dut/imu_logic_i/spi_imu_interface_0/U0/addr_out">
+      <obj_property name="ElementShortName">addr_out[7:0]</obj_property>
+      <obj_property name="ObjectShortName">addr_out[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/TB_imu_logic/dut/imu_logic_i/spi_imu_interface_0/U0/data">
+      <obj_property name="ElementShortName">data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/TB_imu_logic/dut/imu_logic_i/spi_imu_interface_0/U0/data_reg">
+      <obj_property name="ElementShortName">data_reg[7:0]</obj_property>
+      <obj_property name="ObjectShortName">data_reg[7:0]</obj_property>
+   </wvobject>
+</wave_config>
