@@ -29,18 +29,22 @@ proc checkRequiredFiles { origin_dir} {
 
   set files [list \
  "[file normalize "$origin_dir/src/ps_bram_addr_fix.vhd"]"\
- "[file normalize "$origin_dir/src/addr_mapping.vhd"]"\
- "[file normalize "$origin_dir/src/imu_addr.vhd"]"\
- "[file normalize "$origin_dir/src/imu2bram.vhd"]"\
  "[file normalize "$origin_dir/src/clk_divider.vhd"]"\
  "[file normalize "$origin_dir/src/debounce.vhd"]"\
+ "[file normalize "$origin_dir/src/imu2bram.vhd"]"\
  "[file normalize "$origin_dir/src/spi_imu_interface.vhd"]"\
+ "[file normalize "$origin_dir/src/imu_controller.vhd"]"\
+ "[file normalize "$origin_dir/src/addr_mapping.vhd"]"\
+ "[file normalize "$origin_dir/src/imu_addr.vhd"]"\
  "[file normalize "$origin_dir/src/bram_interface.vhd"]"\
  "[file normalize "$origin_dir/src/nn_ctrl.vhd"]"\
  "[file normalize "$origin_dir/src/uart_module.vhd"]"\
  "[file normalize "$origin_dir/constr/PYNQ-Z2 v1.0.xdc"]"\
+ "[file normalize "$origin_dir/constr/timings.xdc"]"\
  "[file normalize "$origin_dir/sim/TB_imu_logic.vhd"]"\
  "[file normalize "$origin_dir/sim_cfg/TB_imu_logic_behav.wcfg"]"\
+ "[file normalize "$origin_dir/sim/TB_imu_controller.v"]"\
+ "[file normalize "$origin_dir/sim_cfg/TB_imu_controller_behav.wcfg"]"\
   ]
   foreach ifile $files {
     if { ![file isfile $ifile] } {
@@ -167,13 +171,14 @@ set_property -name "simulator.xsim_version" -value "2022.2" -objects $obj
 set_property -name "simulator_language" -value "Mixed" -objects $obj
 set_property -name "sim_compile_state" -value "1" -objects $obj
 set_property -name "target_language" -value "VHDL" -objects $obj
-set_property -name "webtalk.activehdl_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.modelsim_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.questa_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.riviera_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.vcs_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.xsim_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.xsim_launch_sim" -value "30" -objects $obj
+set_property -name "webtalk.activehdl_export_sim" -value "19" -objects $obj
+set_property -name "webtalk.modelsim_export_sim" -value "19" -objects $obj
+set_property -name "webtalk.questa_export_sim" -value "19" -objects $obj
+set_property -name "webtalk.riviera_export_sim" -value "19" -objects $obj
+set_property -name "webtalk.vcs_export_sim" -value "19" -objects $obj
+set_property -name "webtalk.xcelium_export_sim" -value "1" -objects $obj
+set_property -name "webtalk.xsim_export_sim" -value "19" -objects $obj
+set_property -name "webtalk.xsim_launch_sim" -value "77" -objects $obj
 set_property -name "xpm_libraries" -value "XPM_CDC XPM_FIFO XPM_MEMORY" -objects $obj
 
 # Create 'sources_1' fileset (if not found)
@@ -185,12 +190,13 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 set obj [get_filesets sources_1]
 set files [list \
  [file normalize "${origin_dir}/src/ps_bram_addr_fix.vhd"] \
- [file normalize "${origin_dir}/src/addr_mapping.vhd"] \
- [file normalize "${origin_dir}/src/imu_addr.vhd"] \
- [file normalize "${origin_dir}/src/imu2bram.vhd"] \
  [file normalize "${origin_dir}/src/clk_divider.vhd"] \
  [file normalize "${origin_dir}/src/debounce.vhd"] \
+ [file normalize "${origin_dir}/src/imu2bram.vhd"] \
  [file normalize "${origin_dir}/src/spi_imu_interface.vhd"] \
+ [file normalize "${origin_dir}/src/imu_controller.vhd"] \
+ [file normalize "${origin_dir}/src/addr_mapping.vhd"] \
+ [file normalize "${origin_dir}/src/imu_addr.vhd"] \
  [file normalize "${origin_dir}/src/bram_interface.vhd"] \
  [file normalize "${origin_dir}/src/nn_ctrl.vhd"] \
  [file normalize "${origin_dir}/src/uart_module.vhd"] \
@@ -199,21 +205,6 @@ add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset file properties for remote files
 set file "$origin_dir/src/ps_bram_addr_fix.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "VHDL" -objects $file_obj
-
-set file "$origin_dir/src/addr_mapping.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "VHDL" -objects $file_obj
-
-set file "$origin_dir/src/imu_addr.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "VHDL" -objects $file_obj
-
-set file "$origin_dir/src/imu2bram.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
@@ -228,7 +219,27 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
 
+set file "$origin_dir/src/imu2bram.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
 set file "$origin_dir/src/spi_imu_interface.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+set file "$origin_dir/src/imu_controller.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+set file "$origin_dir/src/addr_mapping.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+set file "$origin_dir/src/imu_addr.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
@@ -273,9 +284,21 @@ set file "$origin_dir/constr/PYNQ-Z2 v1.0.xdc"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
 set_property -name "file_type" -value "XDC" -objects $file_obj
+set_property -name "used_in" -value "implementation" -objects $file_obj
+set_property -name "used_in_synthesis" -value "0" -objects $file_obj
+
+# Add/Import constrs file and set constrs file properties
+set file "[file normalize "$origin_dir/constr/timings.xdc"]"
+set file_added [add_files -norecurse -fileset $obj [list $file]]
+set file "$origin_dir/constr/timings.xdc"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+set_property -name "file_type" -value "XDC" -objects $file_obj
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]
+set_property -name "target_constrs_file" -value "[file normalize "$origin_dir/constr/timings.xdc"]" -objects $obj
+set_property -name "target_ucf" -value "[file normalize "$origin_dir/constr/timings.xdc"]" -objects $obj
 
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {
@@ -303,10 +326,35 @@ set_property -name "file_type" -value "VHDL" -objects $file_obj
 # Set 'sim_1' fileset properties
 set obj [get_filesets sim_1]
 set_property -name "nl.mode" -value "funcsim" -objects $obj
-set_property -name "sim_mode" -value "post-synthesis" -objects $obj
 set_property -name "top" -value "TB_imu_logic" -objects $obj
 set_property -name "top_auto_set" -value "0" -objects $obj
 set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
+
+# Create 'block_sim' fileset (if not found)
+if {[string equal [get_filesets -quiet block_sim] ""]} {
+  create_fileset -simset block_sim
+}
+
+# Set 'block_sim' fileset object
+set obj [get_filesets block_sim]
+set files [list \
+ [file normalize "${origin_dir}/sim/TB_imu_controller.v"] \
+ [file normalize "${origin_dir}/sim_cfg/TB_imu_controller_behav.wcfg"] \
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'block_sim' fileset file properties for remote files
+# None
+
+# Set 'block_sim' fileset file properties for local files
+# None
+
+# Set 'block_sim' fileset properties
+set obj [get_filesets block_sim]
+set_property -name "top" -value "TB_imu_controller" -objects $obj
+set_property -name "top_auto_set" -value "0" -objects $obj
+set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
+set_property -name "xsim.simulate.runtime" -value "1ms" -objects $obj
 
 # Set 'utils_1' fileset object
 set obj [get_filesets utils_1]
@@ -330,15 +378,6 @@ set obj [get_filesets utils_1]
 
 
 # Adding sources referenced in BDs, if not already added
-if { [get_files addr_mapping.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/addr_mapping.vhd"
-}
-if { [get_files imu_addr.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/imu_addr.vhd"
-}
-if { [get_files imu2bram.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/imu2bram.vhd"
-}
 if { [get_files clk_divider.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
 }
@@ -348,14 +387,11 @@ if { [get_files debounce.vhd] == "" } {
 if { [get_files spi_imu_interface.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/spi_imu_interface.vhd"
 }
-if { [get_files addr_mapping.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/addr_mapping.vhd"
-}
-if { [get_files imu_addr.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/imu_addr.vhd"
-}
 if { [get_files imu2bram.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/imu2bram.vhd"
+}
+if { [get_files imu_controller.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/imu_controller.vhd"
 }
 if { [get_files clk_divider.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
@@ -368,6 +404,18 @@ if { [get_files clk_divider.vhd] == "" } {
 }
 if { [get_files spi_imu_interface.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/spi_imu_interface.vhd"
+}
+if { [get_files clk_divider.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
+}
+if { [get_files debounce.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/debounce.vhd"
+}
+if { [get_files imu2bram.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/imu2bram.vhd"
+}
+if { [get_files imu_controller.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/imu_controller.vhd"
 }
 
 
@@ -375,7 +423,7 @@ if { [get_files spi_imu_interface.vhd] == "" } {
 proc cr_bd_imu_logic { parentCell } {
 # The design that will be created by this Tcl proc contains the following 
 # module references:
-# clk_divider, imu2bram, imu_addr, debounce, spi_imu_interface
+# clk_divider, debounce, imu2bram, imu_controller, debounce, spi_imu_interface
 
 
 
@@ -394,8 +442,9 @@ proc cr_bd_imu_logic { parentCell } {
   if { $bCheckModules == 1 } {
      set list_check_mods "\ 
   clk_divider\
+  debounce\
   imu2bram\
-  imu_addr\
+  imu_controller\
   debounce\
   spi_imu_interface\
   "
@@ -458,7 +507,10 @@ proc cr_bd_imu_logic { parentCell } {
   set ck_ss [ create_bd_port -dir O ck_ss ]
   set clk [ create_bd_port -dir I -type clk -freq_hz 125000000 clk ]
   set data_bram [ create_bd_port -dir O -from 15 -to 0 data_bram ]
+  set en [ create_bd_port -dir I en ]
+  set get_data_flag [ create_bd_port -dir O get_data_flag ]
   set rst [ create_bd_port -dir I rst ]
+  set usr_bank [ create_bd_port -dir O -from 1 -to 0 usr_bank ]
   set we [ create_bd_port -dir O -from 1 -to 0 we ]
 
   # Create instance: clk_divider_0, and set properties
@@ -474,6 +526,17 @@ proc cr_bd_imu_logic { parentCell } {
     set_property CONFIG.out_freq {2000000} $clk_divider_0
 
 
+  # Create instance: enable_debounce, and set properties
+  set block_name debounce
+  set block_cell_name enable_debounce
+  if { [catch {set enable_debounce [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $enable_debounce eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
   # Create instance: imu2bram_0, and set properties
   set block_name imu2bram
   set block_cell_name imu2bram_0
@@ -485,13 +548,13 @@ proc cr_bd_imu_logic { parentCell } {
      return 1
    }
   
-  # Create instance: imu_addr_0, and set properties
-  set block_name imu_addr
-  set block_cell_name imu_addr_0
-  if { [catch {set imu_addr_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+  # Create instance: imu_controller_0, and set properties
+  set block_name imu_controller
+  set block_cell_name imu_controller_0
+  if { [catch {set imu_controller_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
-   } elseif { $imu_addr_0 eq "" } {
+   } elseif { $imu_controller_0 eq "" } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
@@ -521,19 +584,25 @@ proc cr_bd_imu_logic { parentCell } {
   # Create port connections
   connect_bd_net -net Clk5Mhz_clk_div [get_bd_pins clk_divider_0/clk_div] [get_bd_pins imu2bram_0/clk] [get_bd_pins spi_imu_interface_0/clk]
   connect_bd_net -net ck_miso_1 [get_bd_ports ck_miso] [get_bd_pins spi_imu_interface_0/MISO]
-  connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins clk_divider_0/clk] [get_bd_pins imu_addr_0/clk] [get_bd_pins reset_debounce/clk]
+  connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins clk_divider_0/clk] [get_bd_pins enable_debounce/clk] [get_bd_pins imu_controller_0/clk] [get_bd_pins reset_debounce/clk]
+  connect_bd_net -net en_1 [get_bd_ports en] [get_bd_pins enable_debounce/sig]
+  connect_bd_net -net enable_debounce_debounce_sig [get_bd_pins enable_debounce/debounce_sig] [get_bd_pins imu_controller_0/en]
   connect_bd_net -net imu2bram_0_addr_bram [get_bd_ports addr_bram] [get_bd_pins imu2bram_0/addr_bram]
   connect_bd_net -net imu2bram_0_data_bram [get_bd_ports data_bram] [get_bd_pins imu2bram_0/data_bram]
   connect_bd_net -net imu2bram_0_we [get_bd_ports we] [get_bd_pins imu2bram_0/we]
-  connect_bd_net -net imu_addr_0_addr [get_bd_pins imu_addr_0/addr] [get_bd_pins spi_imu_interface_0/addr]
-  connect_bd_net -net reset_debounce_debounce_sig [get_bd_pins clk_divider_0/rst] [get_bd_pins imu_addr_0/rst] [get_bd_pins reset_debounce/debounce_sig] [get_bd_pins spi_imu_interface_0/rst]
+  connect_bd_net -net imu_controller_0_get_data [get_bd_ports get_data_flag] [get_bd_pins imu_controller_0/get_data]
+  connect_bd_net -net imu_controller_0_message [get_bd_pins imu_controller_0/message] [get_bd_pins spi_imu_interface_0/message]
+  connect_bd_net -net imu_controller_0_new_msg [get_bd_pins imu_controller_0/new_msg] [get_bd_pins spi_imu_interface_0/new_message]
+  connect_bd_net -net imu_controller_0_usr_bank [get_bd_ports usr_bank] [get_bd_pins imu2bram_0/usr_bank] [get_bd_pins imu_controller_0/usr_bank]
+  connect_bd_net -net reset_debounce_debounce_sig [get_bd_pins clk_divider_0/rst] [get_bd_pins imu_controller_0/rst] [get_bd_pins reset_debounce/debounce_sig] [get_bd_pins spi_imu_interface_0/rst]
   connect_bd_net -net rst_1 [get_bd_ports rst] [get_bd_pins reset_debounce/sig]
   connect_bd_net -net spi_imu_interface_0_CS [get_bd_ports ck_ss] [get_bd_pins spi_imu_interface_0/CS]
   connect_bd_net -net spi_imu_interface_0_MOSI [get_bd_ports ck_mosi] [get_bd_pins spi_imu_interface_0/MOSI]
   connect_bd_net -net spi_imu_interface_0_SCLK [get_bd_ports ck_sck] [get_bd_pins spi_imu_interface_0/SCLK]
   connect_bd_net -net spi_imu_interface_0_addr_out [get_bd_pins imu2bram_0/addr_imu] [get_bd_pins spi_imu_interface_0/addr_out]
-  connect_bd_net -net spi_imu_interface_0_data [get_bd_pins imu2bram_0/data_imu] [get_bd_pins spi_imu_interface_0/data]
-  connect_bd_net -net spi_imu_interface_0_data_ready [get_bd_pins imu2bram_0/new_data] [get_bd_pins imu_addr_0/inc] [get_bd_pins spi_imu_interface_0/data_ready]
+  connect_bd_net -net spi_imu_interface_0_data [get_bd_pins imu2bram_0/data_imu] [get_bd_pins imu_controller_0/response] [get_bd_pins spi_imu_interface_0/response]
+  connect_bd_net -net spi_imu_interface_0_data_ready [get_bd_pins imu2bram_0/new_data] [get_bd_pins imu_controller_0/data_ready] [get_bd_pins spi_imu_interface_0/data_ready]
+  connect_bd_net -net spi_imu_interface_0_output_valid [get_bd_pins imu2bram_0/data_valid] [get_bd_pins spi_imu_interface_0/output_valid]
 
   # Create address segments
 
@@ -583,6 +652,7 @@ proc cr_bd_imu2nn { parentCell } {
   if { $bCheckIPs == 1 } {
      set list_check_ips "\ 
   xilinx.com:ip:blk_mem_gen:8.4\
+  xilinx.com:ip:xlconcat:2.1\
   xilinx.com:ip:xlslice:1.0\
   xilinx.com:ip:axi_bram_ctrl:4.1\
   xilinx.com:ip:smartconnect:1.0\
@@ -1400,6 +1470,8 @@ proc create_hier_cell_PS_bram { parentCell nameHier } {
   set ck_sck [ create_bd_port -dir O ck_sck ]
   set ck_ss [ create_bd_port -dir O ck_ss ]
   set clk [ create_bd_port -dir I -type clk -freq_hz 125000000 clk ]
+  set en [ create_bd_port -dir I en ]
+  set get_data_flag [ create_bd_port -dir O get_data_flag ]
   set led [ create_bd_port -dir O -from 3 -to 0 led ]
   set rst [ create_bd_port -dir I rst ]
 
@@ -1438,12 +1510,16 @@ proc create_hier_cell_PS_bram { parentCell nameHier } {
   ] $nn_bram
 
 
+  # Create instance: xlconcat_0, and set properties
+  set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]
+
   # Create instance: xlslice_0, and set properties
   set xlslice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_0 ]
   set_property -dict [list \
     CONFIG.DIN_FROM {15} \
-    CONFIG.DIN_TO {12} \
+    CONFIG.DIN_TO {14} \
     CONFIG.DIN_WIDTH {16} \
+    CONFIG.DOUT_WIDTH {2} \
   ] $xlslice_0
 
 
@@ -1455,14 +1531,18 @@ proc create_hier_cell_PS_bram { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net ck_miso_1 [get_bd_ports ck_miso] [get_bd_pins imu_logic_0/ck_miso]
   connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins PS_bram/clk] [get_bd_pins imu_logic_0/clk] [get_bd_pins nn_bram/clka]
+  connect_bd_net -net en_0_1 [get_bd_ports en] [get_bd_pins imu_logic_0/en]
   connect_bd_net -net imu2bram_0_addr_bram [get_bd_pins PS_bram/addr_in] [get_bd_pins imu_logic_0/addr_bram] [get_bd_pins nn_bram/addra]
   connect_bd_net -net imu2bram_0_data_bram [get_bd_pins PS_bram/data_in] [get_bd_pins imu_logic_0/data_bram] [get_bd_pins nn_bram/dina] [get_bd_pins xlslice_0/Din]
   connect_bd_net -net imu2bram_0_we [get_bd_pins PS_bram/we_in] [get_bd_pins imu_logic_0/we] [get_bd_pins nn_bram/wea]
   connect_bd_net -net imu_logic_0_ck_mosi [get_bd_ports ck_mosi] [get_bd_pins imu_logic_0/ck_mosi]
   connect_bd_net -net imu_logic_0_ck_sck [get_bd_ports ck_sck] [get_bd_pins imu_logic_0/ck_sck]
   connect_bd_net -net imu_logic_0_ck_ss [get_bd_ports ck_ss] [get_bd_pins imu_logic_0/ck_ss]
+  connect_bd_net -net imu_logic_0_get_data_flag [get_bd_ports get_data_flag] [get_bd_pins imu_logic_0/get_data_flag]
+  connect_bd_net -net imu_logic_0_usr_bank [get_bd_pins imu_logic_0/usr_bank] [get_bd_pins xlconcat_0/In1]
   connect_bd_net -net rst_1 [get_bd_ports rst] [get_bd_pins imu_logic_0/rst]
-  connect_bd_net -net xlslice_0_Dout [get_bd_ports led] [get_bd_pins xlslice_0/Dout]
+  connect_bd_net -net xlconcat_0_dout [get_bd_ports led] [get_bd_pins xlconcat_0/dout]
+  connect_bd_net -net xlslice_0_Dout [get_bd_pins xlconcat_0/In0] [get_bd_pins xlslice_0/Dout]
 
   # Create address segments
   assign_bd_address -offset 0x40000000 -range 0x00002000 -target_address_space [get_bd_addr_spaces PS_system/processing_system7_0/Data] [get_bd_addr_segs PS_system/axi_bram_ctrl_0/S_AXI/Mem0] -force
@@ -1471,8 +1551,9 @@ proc create_hier_cell_PS_bram { parentCell nameHier } {
   # Restore current instance
   current_bd_instance $oldCurInst
 
-  validate_bd_design
   save_bd_design
+common::send_gid_msg -ssname BD::TCL -id 2050 -severity "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
+
   close_bd_design $design_name 
 }
 # End of cr_bd_imu2nn()
@@ -1487,8 +1568,6 @@ make_wrapper -files [get_files imu2nn.bd] -import -top
 
 # Create wrapper file for imu_logic.bd
 make_wrapper -files [get_files imu_logic.bd] -import -top
-
-generate_target all [get_files imu2nn.bd]
 
 # Set 'imu_logic_inst_1' fileset object
 set obj [get_filesets imu_logic_inst_1]
