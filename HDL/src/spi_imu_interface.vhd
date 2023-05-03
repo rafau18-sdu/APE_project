@@ -35,14 +35,14 @@ entity spi_imu_interface is
     Port ( clk          : in STD_LOGIC;
            rst          : in STD_LOGIC;
            
-           --read_flag    : in STD_LOGIC;
-           --access_flag : in STD_LOGIC;
-           addr         : in STD_LOGIC_VECTOR (7 downto 0);
+           new_message  : in STD_LOGIC; --Must go high for at least 1 clk, when a message should be send.
            message      : in STD_LOGIC_VECTOR (15 downto 0);
            
-           addr_out     : out STD_LOGIC_VECTOR (7 downto 0);
-           data         : out STD_LOGIC_VECTOR (7 downto 0);
-           data_ready   : out STD_LOGIC;
+           addr_out     : out STD_LOGIC_VECTOR (6 downto 0); 
+           response     : out STD_LOGIC_VECTOR (7 downto 0); -- Is U if read_write_bit = '0'.
+           output_valid : out STD_LOGIC := '0'; -- Is set to 1 if read_write_bit = '1', i.e. response is valid data.
+           data_ready   : out STD_LOGIC; -- Goes high for 1 clock cycle when transmission is done.
+           
            SCLK         : out STD_LOGIC;
            MOSI         : out STD_LOGIC;
            MISO         : in STD_LOGIC;
@@ -53,32 +53,24 @@ end spi_imu_interface;
 architecture Behavioral of spi_imu_interface is
 
     -- Architecture Declarations
-   signal addr_reg          : std_logic_vector(7 downto 0);
-   signal addr_out_reg      : std_logic_vector(7 downto 0);
-   signal data_reg          : std_logic_vector(7 downto 0);
-   signal addr_reg_conf     : std_logic_vector(15 downto 0):=x"0300";
-   signal count             : unsigned(2 downto 0);
-   signal count_conf        : unsigned(3 downto 0);
-  -- signal count_long :unsigned(27 downto 0);
+   signal message_reg       : STD_LOGIC_VECTOR(message'high downto message'low); -- Only 15 downto 8 are sued when read_flag = '1'.
+   signal read_flag         : STD_LOGIC; -- Goes high when message expects response.
+   
+   signal addr_out_reg      : STD_LOGIC_VECTOR(addr_out'high downto addr_out'low);
+   signal response_reg      : STD_LOGIC_VECTOR(response'high downto response'low);
+   signal count             : UNSIGNED(3 downto 0);
+   
+   signal new_message_old   : STD_LOGIC := '1';
       
-   signal conf_flag         : std_logic:='0';
    TYPE STATE_TYPE IS (
-      s0,
-      s1,
-      s2,
-      s3,
-      s4,
-      s5,
-      s6,
-      s_conf_1,
-      s_conf_2,
-      s_conf_3 --delay 15
+      WAITING,
+      CHIP_SELECT,
+      WRITE_MSG,
+      READ_MSG,
+      READ_WAIT,
+      READ_RX,
+      SET_OUTPUT
    );
-
-   -- State vector declaration
-   --ATTRIBUTE state_vector : string;
-   --ATTRIBUTE state_vector OF fsm_ctrl : ARCHITECTURE IS "current_state" ;
-
 
    -- Declare current and next state signals
    SIGNAL current_state : STATE_TYPE ;
@@ -86,6 +78,8 @@ architecture Behavioral of spi_imu_interface is
 
 
 begin
+
+    
 
    ----------------------------------------------------------------------------
    clocked : PROCESS(
@@ -95,45 +89,58 @@ begin
    ----------------------------------------------------------------------------
    BEGIN
       IF (rst = '1') THEN
-         current_state <= s0;
+         current_state <= WAITING;
          -- Reset Values
-         count <= (others=>'0');
-         count_conf <= (others=>'0');
-         addr_reg<= (others=>'0');
-         data_reg<= (others=>'0');
+        message_reg     <= (others => '0');
+        read_flag       <= '0';
+        data_ready      <= '0';
+                    
+        addr_out_reg    <= (others => '0');
+        response_reg    <= (others => '0');
+        count           <= (others => '0');
 
       ELSIF (clk'EVENT AND clk = '1') THEN
          current_state <= next_state;
          -- Default Assignment To Internals
+         
+         new_message_old <= new_message;
 
-         -- Combined Actions for internal signals only
+         -- Combined Actions for non SPI signals signals only
          CASE current_state IS
-         WHEN s0 =>
-            count <= (others=>'0');
-            count_conf <= (others=>'0');
-         addr_reg<= (others=>'1');
-         addr_reg_conf<= (others=>'0');
-         data_reg<= (others=>'0');
-         WHEN s1 =>
-            addr_reg <= '1' & addr(6 downto 0);
-            addr_out_reg <= '0' & addr(6 downto 0);
-           --addr_reg <= '1' & "0110100";
-         WHEN s2 =>
-            addr_reg <= addr_reg(6 downto 0) & '0';
-            count <= count +1;
-         WHEN s3 =>
-             count <= count +1;
-         WHEN s4 =>
-            data_reg <= data_reg(6 downto 0) & MISO ;
-            count <= count +1;             
+         WHEN WAITING =>
+            count           <= (others=>'0');
+            addr_out_reg    <= (others=>'0');
+            response_reg    <= (others=>'0');
+            data_ready      <= '0';
             
-          WHEN s_conf_1 =>
-            addr_reg_conf <= x"06"&"00000000";
-         WHEN s_conf_2 =>
-            addr_reg_conf <= addr_reg_conf(14 downto 0) & '0';
-            count_conf <= count_conf +1;        
-         WHEN s_conf_3 =>
-             count_conf <= count_conf +1;            
+         WHEN CHIP_SELECT =>
+            read_flag <= message(15);
+            message_reg <= message;
+            addr_out_reg <= message(14 downto 8);
+            
+         WHEN WRITE_MSG =>
+            message_reg <= message_reg(14 downto 0) & '0';
+            count <= count +1;
+            
+         WHEN READ_MSG =>
+            message_reg <= message_reg(14 downto 0) & '0';
+            count <= count +1;
+         
+         WHEN READ_WAIT =>
+             count <= count +1;
+         
+         WHEN READ_RX =>
+            response_reg <= response_reg(6 downto 0) & MISO ;
+            count <= count +1;
+            
+         WHEN SET_OUTPUT =>
+            output_valid <= '0';
+            if read_flag = '1' then
+                response <= response_reg;
+                addr_out <= addr_out_reg;
+                output_valid <= '1';
+            end if;
+            data_ready <= '1';          
          
          WHEN OTHERS =>
             NULL;
@@ -143,78 +150,71 @@ begin
 
    END PROCESS clocked;
 
-
    ----------------------------------------------------------------------------
    nextstate : PROCESS (
       current_state,
       count,
-      count_conf
+      new_message,
+      message
    )
    ----------------------------------------------------------------------------
    BEGIN
       CASE current_state IS
-      WHEN s0 =>
-         IF conf_flag='0' THEN
-            next_state <= s_conf_1;
+      WHEN WAITING =>
+            if new_message_old = '0' and new_message = '1' then
+                next_state <= CHIP_SELECT;
+            else
+                next_state <= WAITING;
+            end if;
+            
+      WHEN CHIP_SELECT =>
+            if message(15) = '1' then
+                next_state <= READ_MSG;
+            else
+                next_state <= WRITE_MSG;
+            end if;
+            
+      WHEN WRITE_MSG =>
+         IF (count = 15) THEN
+            next_state <= SET_OUTPUT;
          ELSE
-            next_state <= s1;
+            next_state <= WRITE_MSG;
          END IF;
-      WHEN s1 =>
-            next_state <= s2;
-      WHEN s2 =>
+         
+      WHEN READ_MSG =>
          IF (count = 7) THEN
-            next_state <= s3;
+            next_state <= READ_WAIT;
          ELSE
-            next_state <= s2;
-         END IF;
-      WHEN s3 =>
-         IF (count = 7) THEN
-            next_state <= s4;
-         ELSE
-            next_state <= s3;
-         END IF;
-      WHEN s4 =>
-         IF (count = 7) THEN
-            next_state <= s5;
-         ELSE
-            next_state <= s4;
+            next_state <= READ_MSG;
          END IF;
        
-      WHEN s5 =>
-            next_state <= s6;
+      WHEN READ_WAIT =>
+        if (count = 15) then
+            next_state <= READ_RX;
+        else
+            next_state <= READ_WAIT;
+        end if;
             
-      WHEN s6 =>
-            next_state <= s0;
-
- --configuration phase     
-      
-      WHEN s_conf_1 =>
-            next_state <= s_conf_2; 
-                
-      WHEN s_conf_2 =>
-         IF (count_conf = 15) THEN
-            next_state <= s_conf_3;
-         ELSE
-            next_state <= s_conf_2;
-         END IF;
-      WHEN s_conf_3 =>
-         IF (count_conf = 14) THEN
-            next_state <= s0;
-            conf_flag<='1';
-         ELSE
-            next_state <= s_conf_3;
-            conf_flag<='1';
-         END IF;                                
+      WHEN READ_RX =>
+        if (count = 7) then
+            next_state <= SET_OUTPUT;
+        else
+            next_state <= READ_RX;
+        end if;
+        
+      WHEN SET_OUTPUT =>
+        next_state <= WAITING;
+                               
       WHEN OTHERS =>
-         next_state <= s0;
+         next_state <= WAITING;
       END CASE;
 
    END PROCESS nextstate;
 
 
    ----------------------------------------------------------------------------
-   output : PROCESS (
-      current_state, clk, addr_reg, data_reg
+   imu_control : PROCESS (
+      current_state, clk, message_reg
    )
    ----------------------------------------------------------------------------
    BEGIN
@@ -224,50 +224,40 @@ begin
 
       -- Combined Actions
       CASE current_state IS
-      WHEN s0 =>
+      WHEN WAITING =>
          cs<= '1';
          MOSI<='0';
-         data <= (others=>'0');
-         SCLK<='0';
-         data_ready <='0';
-      WHEN s1 =>
-         cs<= '0';
-      WHEN s2 =>
-         MOSI<= addr_reg(7);
-         SCLK <= not clk;
-         cs<= '0'; 
-      WHEN s3 =>
-         SCLK<='1';
-         cs<= '0';  
-      WHEN s4 =>
-         SCLK<= clk;
-         cs<= '0';  
-      WHEN s5 =>
-         SCLK<='1';
-         data <= data_reg;
-         addr_out <= addr_out_reg;
-         data_ready <= '1';  
-       WHEN s6 =>
-         SCLK <= '1';
-         data <= data_reg;
-         addr_out <= addr_out_reg; 
-         data_ready <= '0';  
-
-       WHEN s_conf_1 =>
-         cs<= '0';   
-       WHEN s_conf_2 =>
-         MOSI<= addr_reg_conf(15);
-         SCLK <= not clk;
-         cs<= '0';        
-       WHEN s_conf_3 =>
          SCLK<='1';
          
-              
+      WHEN CHIP_SELECT =>
+         cs<= '0';
+         
+      WHEN WRITE_MSG =>
+         MOSI<= message_reg(15);
+         SCLK <= not clk;
+         cs<= '0';
+         
+      WHEN READ_MSG =>
+         MOSI<= message_reg(15);
+         SCLK <= not clk;
+         cs<= '0';
+         
+      WHEN READ_WAIT =>
+         SCLK<='1';
+         cs<= '0';  
+         
+      WHEN READ_RX =>
+         SCLK<= clk;
+         cs<= '0';
+         
+      WHEN SET_OUTPUT =>
+         SCLK<='1';
+         
       WHEN OTHERS =>
          NULL;
       END CASE;
    
-   END PROCESS output;
+   END PROCESS;
 
    -- Concurrent Statements
 
