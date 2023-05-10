@@ -50,7 +50,7 @@ end imu_bram2uart;
 
 architecture Behavioral of imu_bram2uart is
 
-    component uart_tx_module
+    component uart_tx_module is
         Port (  rst             : in  STD_LOGIC;
                 clk             : in  STD_LOGIC; -- clock must be 16x baudrate
                 sig             : out STD_LOGIC;
@@ -60,7 +60,7 @@ architecture Behavioral of imu_bram2uart is
                 );
     end component;
     
-    component clk_divider
+    component clk_divider is
         Generic ( base_freq : integer := 125000000;
                   out_freq  : integer := 1843200     -- 115200 baud        
         );  
