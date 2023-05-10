@@ -55,6 +55,7 @@ architecture Behavioral of imu_controller is
 type config_rom_type is array (0 to 31) of std_logic_vector(15 downto 0);
 constant config_rom : config_rom_type := (
                     x"0601", -- Disable low power
+                    x"1101", -- INT_ENABLE_1 RAW_DATA_0_RDY_EN = 1
                     x"7F20", -- REG_BANK_SEL USR_BNK_2
                     x"000A", -- GYRO_SMPLRT_DIV 100Hz = 10
                     x"01" & "00011101", -- GYRO_CONFIG_1 +-1000 dps DLPF = 1 + DLPFCFG = 3
@@ -75,11 +76,10 @@ constant config_rom : config_rom_type := (
                     x"9A00", -- ZA_OFFS_H
                     x"9B00", -- ZA_OFFS_L
                     x"7F00", -- REG_BANK_SEL USR_BNK_0
-                    x"1101", -- INT_ENABLE_1 RAW_DATA_0_RDY_EN = 1
                     others => (others => '0')
                   );
                   
-constant config_len : integer := 22;
+constant config_len : integer := 23;
 
 signal config_cnt : natural range 0 to config_len := 0;
                  
@@ -111,8 +111,7 @@ signal running_cnt      : natural range 0 to running_len - 1 := 0;
 constant clk_div        : natural := natural(ceil(real(base_clk_mhz)/real(spi_clk_mhz))) + 1;
 signal clk_div_cnt      : natural range 0 to clk_div := 0;
 
-
-constant wakeup_delay     : natural := 31;
+constant wakeup_delay     : natural := 2**12 - 1;
 signal delay_cnt   : natural range 0 to 2**12 - 1 :=  0;
 signal delay_active : STD_LOGIC := '0';
 
@@ -128,7 +127,7 @@ TYPE STATE_TYPE IS (
    );
 
    -- Declare current and next state signals
-   SIGNAL current_state : STATE_TYPE;
+   SIGNAL current_state : STATE_TYPE := CONFIG_START;
    
     procedure wrap_inc( signal cnt : inout natural;
                         constant val   : in natural) is
@@ -184,6 +183,7 @@ begin
             delay_active <= '0';
             delay_cnt <= 0;
             get_data <= '0';
+            data_ready_shift <= (others => '0');
             
         elsif rising_edge(clk) and en = '1' then
         
@@ -290,7 +290,7 @@ begin
                     end if;
             
                 when others =>
-                    NULL;
+                    current_state <= CONFIG_START;
             end case;                    
         end if;
     
