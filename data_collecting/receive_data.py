@@ -29,26 +29,30 @@ def receive_data(port: str, baud: int, output_path: str | Path, data_len: int=14
     circ_buffer = deque(maxlen=data_len)
     
     while True:
-        read_data = ser_rx.read(data_len)
-
+        read_data = ser_rx.read()
+        
         circ_buffer.append(read_data)
         
+        #print(read_data)
+        
         if len(circ_buffer) == data_len:
-            if circ_buffer[0] == 0x00 and circ_buffer[-1] == 0xFF:
+            if circ_buffer[0] == bytes([0x80]) and circ_buffer[-1] == bytes([0xFE]):
                 break
     
     # Write data to file
     with open(output_path, 'w') as ofile:
 
         while True:
-            read_data = ser_rx.read(14)
-            if read_data[0] == 0x00 and read_data[-1] == 0xFF:  # check if start and stop bytes are correct
+            read_data = ser_rx.read(data_len)
+            if read_data[0] == 0x80 and read_data[-1] == 0xFE:  # check if start and stop bytes are correct
                 values = struct.unpack('<6h', read_data[1:-1])  # unpack the 12 data bytes into 6 16-bit integers
                 
                 #print(values)
                 
                 for value in values:
                     ofile.write(str(value) + ',')
+                
+                ofile.write("\n")
             else:
                 print("Start/Stop did not match")
                 break
@@ -61,7 +65,7 @@ def main(data_path, port, baud, data_len):
 
 if __name__ == "__main__":
     # Run argument parser
-    parser = argparse.ArgumentParser(description="Program used to transmit a .ppm image over UART")
+    parser = argparse.ArgumentParser(description="Program used to receive a data over UART")
     parser.add_argument('data_path', help="Path to save data")
     parser.add_argument('-l', '--data_len', required=False, default=14, help="Number of bytes to receive")
     parser.add_argument('-p', '--port', required=False, help="Serial port to use for receiving")
