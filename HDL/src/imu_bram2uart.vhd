@@ -40,6 +40,9 @@ entity imu_bram2uart is
     Port (  clk             : in  STD_LOGIC;
             rst             : in  STD_LOGIC;
             imu_get_data    : in  STD_LOGIC;
+            
+            active_bit      : in  STD_LOGIC;
+            
             data_bram       : in  STD_LOGIC_VECTOR (15 downto 0);
             addr_bram       : out STD_LOGIC_VECTOR (bram_addr_width - 1 downto 0) := (others => '0');
             en_bram         : out  STD_LOGIC := '1';
@@ -178,6 +181,7 @@ begin
         elsif rising_edge(clk) then
             imu_get_data_shift <= imu_get_data_shift(0) & imu_get_data;
             dummy_cnt <= 0;
+            en_bram <= '1';
             
             case current_state is 
                 when START =>
@@ -205,7 +209,7 @@ begin
                 
                 when SEND_START_BYTE =>
                 
-                    data_uart <= (others => '0');
+                    data_uart <= (7 => active_bit, others => '0');
                     clk_div_cnt <= 0;
                     delay_cnt <= 0;
                     current_state <= WAIT_SEND_START;
@@ -213,7 +217,7 @@ begin
                     
                 when SEND_END_BYTE =>
                 
-                    data_uart <= (others => '1');
+                    data_uart <= (0 => '0', others => '1');
                     clk_div_cnt <= 0;
                     delay_cnt <= 0;
                     current_state <= WAIT_SEND_END;
