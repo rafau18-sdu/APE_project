@@ -3,3 +3,5 @@ HDL/vivado_project/
 SW/vitis_project/
 
 **.vscode
+
+**lstm_implementation/
