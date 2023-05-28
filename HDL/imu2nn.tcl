@@ -1855,7 +1855,6 @@ if { $obj != "" } {
 
 }
 set obj [get_runs synth_1]
-set_property -name "incremental_checkpoint" -value "$proj_dir/imu2nn.srcs/utils_1/imports/synth_1/imu2nn_wrapper.dcp" -objects $obj
 set_property -name "auto_incremental_checkpoint" -value "1" -objects $obj
 set_property -name "strategy" -value "Vivado Synthesis Defaults" -objects $obj
 
