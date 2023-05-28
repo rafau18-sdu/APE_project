@@ -1,3 +1,9 @@
 HDL/vivado_project/
 *.log
 SW/vitis_project/
+
+**.vscode
+
+**lstm_implementation/
+
+HDL/custom_ip/*/

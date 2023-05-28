@@ -66,10 +66,57 @@ begin
          end if;
      end process;
      
-     BUFG_inst : BUFG
-   port map (
-      O => clk_div, -- 1-bit output: Clock output
-      I => clk_temp  -- 1-bit input: Clock input
-   );
+    BUFG_inst : BUFG
+    port map (
+        O => clk_div, -- 1-bit output: Clock output
+        I => clk_temp  -- 1-bit input: Clock input
+    );
+
+end Behavioral;
+
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.MATH_REAL.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+library UNISIM;
+use UNISIM.VComponents.all;
+
+entity clk_divider_bd is
+    Generic ( base_freq : integer := 125000000;
+              out_freq  : integer := 1843200     -- 115200 baud        
+    );  
+    Port ( rst : in STD_LOGIC;
+           clk : in STD_LOGIC;
+           clk_div : out STD_LOGIC);
+end clk_divider_bd;
+
+architecture Behavioral of clk_divider_bd is
+
+    component clk_divider is
+        Generic ( base_freq : integer := 125000000;
+                  out_freq  : integer := 1843200     -- 115200 baud        
+        );  
+        Port ( rst : in STD_LOGIC;
+               clk : in STD_LOGIC;
+               clk_div : out STD_LOGIC);
+    end component;
+
+begin
+
+    clk_div_inst : clk_divider
+        Generic map( base_freq => base_freq,
+                  out_freq  => out_freq        
+        )
+        Port map( rst => rst,
+               clk => clk,
+               clk_div => clk_div
+               );
 
 end Behavioral;

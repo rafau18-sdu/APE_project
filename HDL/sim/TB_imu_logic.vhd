@@ -46,7 +46,10 @@ architecture Behavioral of TB_imu_logic is
         ck_ss           : out STD_LOGIC;
         clk             : in STD_LOGIC;
         data_bram       : out STD_LOGIC_VECTOR ( 15 downto 0 );
+        en              : in STD_LOGIC;
+        get_data_flag   : out STD_LOGIC;
         rst             : in STD_LOGIC;
+        usr_bank        : out STD_LOGIC_VECTOR ( 1 downto 0 );
         we              : out STD_LOGIC_VECTOR ( 1 downto 0 )
       );
     end component;
@@ -64,8 +67,11 @@ architecture Behavioral of TB_imu_logic is
     signal ck_ss           :  STD_LOGIC;                       
     signal clk             :  STD_LOGIC := '1';                        
     signal data_bram       :  STD_LOGIC_VECTOR ( 15 downto 0 );
-    signal rst             :  STD_LOGIC := '0';                        
+    signal rst             :  STD_LOGIC := '0';
+    signal en              :  STD_LOGIC := '1';                        
     signal we              :  STD_LOGIC_VECTOR ( 1 downto 0 );
+    signal get_data_flag   :  STD_LOGIC;
+    signal usr_bank        :  STD_LOGIC_VECTOR ( 1 downto 0 );
     
     signal sck_shift        : STD_LOGIC_VECTOR(1 downto 0) := "00";
 
@@ -83,7 +89,10 @@ begin
         clk             =>  clk      ,
         data_bram       =>  data_bram,
         rst             =>  rst      ,
-        we              =>  we
+        en              =>  en       ,
+        we              =>  we       ,
+        get_data_flag   =>  get_data_flag,
+        usr_bank        =>  usr_bank
       );
       
       clk <= not clk after CLK_HPER;

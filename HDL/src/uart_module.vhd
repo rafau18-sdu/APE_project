@@ -88,7 +88,7 @@ begin
                     end if;
                 
                 when COLLECT => -- Keep collecting bits until desired amount is reached
-                    if rx_cnt = to_unsigned(15,4) then
+                    if rx_cnt = 15 then
                         rx_register <= sig & rx_register(data_size + 1 downto 1);
                         
                         if total_bits_collected = to_unsigned(9, 4) then
@@ -125,19 +125,28 @@ use IEEE.NUMERIC_STD.ALL;
 use IEEE.MATH_REAL.ALL;
 
 entity uart_tx_module is
-    Port ( rst : in STD_LOGIC;
-           clk : in STD_LOGIC; -- clock must be 16x baudrate
-           sig : out STD_LOGIC;
-           data : in STD_LOGIC_VECTOR (7 downto 0);
-           new_data_pulse : in STD_LOGIC);
+    Port (  rst             : in  STD_LOGIC;
+            clk             : in  STD_LOGIC; -- clock must be 16x baudrate
+            sig             : out STD_LOGIC;
+            data            : in  STD_LOGIC_VECTOR (7 downto 0);
+            new_data_pulse  : in  STD_LOGIC;
+            data_send       : out STD_LOGIC -- Goes high for one clock, when data has been send.
+            );
 end uart_tx_module;
 
 architecture Behavioral of uart_tx_module is
 
     constant data_size : integer := 8;
+    constant overhead : integer := 3;
+    
     
     signal tx_register : STD_LOGIC_VECTOR(data_size + 1 downto 0);
-    signal tx_idx : unsigned(integer(ceil(log2(real(data_size + 2)))) downto 0) := (others => '0');
+    signal tx_idx : integer range 0 to data_size + overhead := 0;
+    
+    signal tx_cnt : unsigned(3 downto 0) := (others => '0');
+    
+    signal new_data_pulse_shift   : STD_LOGIC_VECTOR(1 downto 0) := "11";
+    
     
     type tx_enum is (WAITING, SEND);
     signal tx_states : tx_enum := WAITING;
@@ -146,55 +155,54 @@ begin
 
     process(clk, rst)
         
-        variable tx_cnt : unsigned(3 downto 0) := (others => '0');
-        
-        variable total_bits_sent : unsigned(4 downto 0) := (others => '0');
-        variable old_data_flag : STD_LOGIC := '1';
-        
     begin
     
         if rst = '1' then
             tx_states <= WAITING;
             sig <= '1';
-            tx_cnt := (others => '0');
-            tx_idx <= (others => '0');
-            total_bits_sent := (others => '0');
+            tx_cnt <= (others => '0');
+            tx_idx <= 0;
             tx_register <= (others => '0');
+            new_data_pulse_shift <= "11";
+            data_send <= '0';
             
         elsif rising_edge(clk) then
+        
+            new_data_pulse_shift <= new_data_pulse_shift(0) & new_data_pulse;
+            data_send <= '0';
         
             case tx_states is
                 when WAITING =>  -- Wait for start pulse
                 
                     sig <= '1';
                 
-                    if old_data_flag = '0' and new_data_pulse = '1' then
+                    if new_data_pulse_shift = "01" then
                         tx_states <= SEND;
-                        tx_cnt := (0 => '1', others => '0');
-                        tx_idx <= (others => '0');
+                        tx_cnt <= (others => '0');
+                        tx_idx <= 0;
                         
                         tx_register <= "1" & data & "0";
                         
                     end if;
                 
                 when SEND => -- Send
-                    if tx_cnt = to_unsigned(1, 4) then
-                        sig <= tx_register(to_integer(tx_idx));
-                        
-                        tx_idx <= tx_idx + 1;
-                        if tx_idx = to_unsigned(data_size + 1, tx_idx'length) then
-                            tx_states <= WAITING;
-                        end if;
-                        
+                    if tx_cnt = 0 then
+                    
+                            sig <= tx_register(0);
+                            tx_register <= '1' & tx_register(tx_register'high downto 1);
+                            
+                            -- Two extra wait for safety.
+                            if tx_idx = data_size + overhead then
+                                data_send <= '1';
+                                tx_states <= WAITING;
+                            end if;
+                            
+                            tx_idx <= tx_idx + 1;
                     end if;
                     
-                    tx_cnt := tx_cnt + 1; -- Use overflow to go back to 0
+                    tx_cnt <= tx_cnt + 1; -- Use overflow to go back to 0
             end case;        
-                
-        old_data_flag := new_data_pulse;
-
         end if;
-    
     end process;
 
 end Behavioral;

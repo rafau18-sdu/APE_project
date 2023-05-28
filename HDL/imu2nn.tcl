@@ -18,33 +18,42 @@
 proc checkRequiredFiles { origin_dir} {
   set status true
   set files [list \
- "[file normalize "$origin_dir/vivado_project/imu2nn.srcs/utils_1/imports/synth_1/debounce.dcp"]"\
-  ]
-  foreach ifile $files {
-    if { ![file isfile $ifile] } {
-      puts " Could not find local file $ifile "
-      set status false
-    }
-  }
-
-  set files [list \
  "[file normalize "$origin_dir/src/ps_bram_addr_fix.vhd"]"\
- "[file normalize "$origin_dir/src/addr_mapping.vhd"]"\
- "[file normalize "$origin_dir/src/imu_addr.vhd"]"\
- "[file normalize "$origin_dir/src/imu2bram.vhd"]"\
  "[file normalize "$origin_dir/src/clk_divider.vhd"]"\
  "[file normalize "$origin_dir/src/debounce.vhd"]"\
- "[file normalize "$origin_dir/src/spi_imu_interface.vhd"]"\
- "[file normalize "$origin_dir/src/bram_interface.vhd"]"\
+ "[file normalize "$origin_dir/src/fix_address.vhd"]"\
  "[file normalize "$origin_dir/src/nn_ctrl.vhd"]"\
  "[file normalize "$origin_dir/src/uart_module.vhd"]"\
+ "[file normalize "$origin_dir/src/imu_bram2uart.vhd"]"\
+ "[file normalize "$origin_dir/src/imu2bram.vhd"]"\
+ "[file normalize "$origin_dir/src/spi_imu_interface.vhd"]"\
+ "[file normalize "$origin_dir/src/imu_controller.vhd"]"\
+ "[file normalize "$origin_dir/src/addr_mapping.vhd"]"\
+ "[file normalize "$origin_dir/src/bram_interface.vhd"]"\
+ "[file normalize "$origin_dir/src/imu_addr.vhd"]"\
  "[file normalize "$origin_dir/constr/PYNQ-Z2 v1.0.xdc"]"\
+ "[file normalize "$origin_dir/constr/timings.xdc"]"\
  "[file normalize "$origin_dir/sim/TB_imu_logic.vhd"]"\
  "[file normalize "$origin_dir/sim_cfg/TB_imu_logic_behav.wcfg"]"\
+ "[file normalize "$origin_dir/sim/TB_imu_bram2uart.v"]"\
+ "[file normalize "$origin_dir/sim/TB_imu_controller.v"]"\
+ "[file normalize "$origin_dir/sim_cfg/TB_imu_controller_behav.wcfg"]"\
+ "[file normalize "$origin_dir/sim/TB_imu_logic.vhd"]"\
   ]
   foreach ifile $files {
     if { ![file isfile $ifile] } {
       puts " Could not find remote file $ifile "
+      set status false
+    }
+  }
+
+  set paths [list \
+ "[file normalize "$origin_dir/[file normalize "$origin_dir/custom_ip"]"]"\
+ "[file normalize "$origin_dir/[file normalize "$origin_dir/custom_ip"]"]"\
+  ]
+  foreach ipath $paths {
+    if { ![file isdirectory $ipath] } {
+      puts " Could not access $ipath "
       set status false
     }
   }
@@ -167,13 +176,13 @@ set_property -name "simulator.xsim_version" -value "2022.2" -objects $obj
 set_property -name "simulator_language" -value "Mixed" -objects $obj
 set_property -name "sim_compile_state" -value "1" -objects $obj
 set_property -name "target_language" -value "VHDL" -objects $obj
-set_property -name "webtalk.activehdl_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.modelsim_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.questa_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.riviera_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.vcs_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.xsim_export_sim" -value "12" -objects $obj
-set_property -name "webtalk.xsim_launch_sim" -value "30" -objects $obj
+set_property -name "webtalk.activehdl_export_sim" -value "25" -objects $obj
+set_property -name "webtalk.modelsim_export_sim" -value "25" -objects $obj
+set_property -name "webtalk.questa_export_sim" -value "25" -objects $obj
+set_property -name "webtalk.riviera_export_sim" -value "25" -objects $obj
+set_property -name "webtalk.vcs_export_sim" -value "25" -objects $obj
+set_property -name "webtalk.xsim_export_sim" -value "25" -objects $obj
+set_property -name "webtalk.xsim_launch_sim" -value "88" -objects $obj
 set_property -name "xpm_libraries" -value "XPM_CDC XPM_FIFO XPM_MEMORY" -objects $obj
 
 # Create 'sources_1' fileset (if not found)
@@ -181,39 +190,36 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
   create_fileset -srcset sources_1
 }
 
+# Set IP repository paths
+set obj [get_filesets sources_1]
+if { $obj != {} } {
+   set_property "ip_repo_paths" "[file normalize "$origin_dir/custom_ip"]" $obj
+
+   # Rebuild user ip_repo's index before adding any source files
+   update_ip_catalog -rebuild
+}
+
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
  [file normalize "${origin_dir}/src/ps_bram_addr_fix.vhd"] \
- [file normalize "${origin_dir}/src/addr_mapping.vhd"] \
- [file normalize "${origin_dir}/src/imu_addr.vhd"] \
- [file normalize "${origin_dir}/src/imu2bram.vhd"] \
  [file normalize "${origin_dir}/src/clk_divider.vhd"] \
  [file normalize "${origin_dir}/src/debounce.vhd"] \
- [file normalize "${origin_dir}/src/spi_imu_interface.vhd"] \
- [file normalize "${origin_dir}/src/bram_interface.vhd"] \
+ [file normalize "${origin_dir}/src/fix_address.vhd"] \
  [file normalize "${origin_dir}/src/nn_ctrl.vhd"] \
  [file normalize "${origin_dir}/src/uart_module.vhd"] \
+ [file normalize "${origin_dir}/src/imu_bram2uart.vhd"] \
+ [file normalize "${origin_dir}/src/imu2bram.vhd"] \
+ [file normalize "${origin_dir}/src/spi_imu_interface.vhd"] \
+ [file normalize "${origin_dir}/src/imu_controller.vhd"] \
+ [file normalize "${origin_dir}/src/addr_mapping.vhd"] \
+ [file normalize "${origin_dir}/src/bram_interface.vhd"] \
+ [file normalize "${origin_dir}/src/imu_addr.vhd"] \
 ]
 add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset file properties for remote files
 set file "$origin_dir/src/ps_bram_addr_fix.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "VHDL" -objects $file_obj
-
-set file "$origin_dir/src/addr_mapping.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "VHDL" -objects $file_obj
-
-set file "$origin_dir/src/imu_addr.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "VHDL" -objects $file_obj
-
-set file "$origin_dir/src/imu2bram.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
@@ -228,12 +234,7 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
 
-set file "$origin_dir/src/spi_imu_interface.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "VHDL" -objects $file_obj
-
-set file "$origin_dir/src/bram_interface.vhd"
+set file "$origin_dir/src/fix_address.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
@@ -248,6 +249,41 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "VHDL" -objects $file_obj
 
+set file "$origin_dir/src/imu_bram2uart.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+set file "$origin_dir/src/imu2bram.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+set file "$origin_dir/src/spi_imu_interface.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+set file "$origin_dir/src/imu_controller.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+set file "$origin_dir/src/addr_mapping.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+set file "$origin_dir/src/bram_interface.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+set file "$origin_dir/src/imu_addr.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
 
 # Set 'sources_1' fileset file properties for local files
 # None
@@ -257,6 +293,27 @@ set obj [get_filesets sources_1]
 set_property -name "dataflow_viewer_settings" -value "min_width=16" -objects $obj
 set_property -name "top" -value "imu2nn_wrapper" -objects $obj
 set_property -name "top_auto_set" -value "0" -objects $obj
+
+# Create 'imu_logic_inst_0' fileset (if not found)
+if {[string equal [get_filesets -quiet imu_logic_inst_0] ""]} {
+  create_fileset -blockset imu_logic_inst_0
+}
+
+# Set IP repository paths
+set obj [get_filesets imu_logic_inst_0]
+if { $obj != {} } {
+   set_property "ip_repo_paths" "[file normalize "$origin_dir/custom_ip"]" $obj
+
+   # Rebuild user ip_repo's index before adding any source files
+   update_ip_catalog -rebuild
+}
+
+# Set 'imu_logic_inst_0' fileset object
+set obj [get_filesets imu_logic_inst_0]
+# Empty (no sources present)
+
+# Set 'imu_logic_inst_0' fileset properties
+set obj [get_filesets imu_logic_inst_0]
 
 # Create 'constrs_1' fileset (if not found)
 if {[string equal [get_filesets -quiet constrs_1] ""]} {
@@ -273,9 +330,21 @@ set file "$origin_dir/constr/PYNQ-Z2 v1.0.xdc"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
 set_property -name "file_type" -value "XDC" -objects $file_obj
+set_property -name "used_in" -value "implementation" -objects $file_obj
+set_property -name "used_in_synthesis" -value "0" -objects $file_obj
+
+# Add/Import constrs file and set constrs file properties
+set file "[file normalize "$origin_dir/constr/timings.xdc"]"
+set file_added [add_files -norecurse -fileset $obj [list $file]]
+set file "$origin_dir/constr/timings.xdc"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+set_property -name "file_type" -value "XDC" -objects $file_obj
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]
+set_property -name "target_constrs_file" -value "[file normalize "$origin_dir/constr/timings.xdc"]" -objects $obj
+set_property -name "target_ucf" -value "[file normalize "$origin_dir/constr/timings.xdc"]" -objects $obj
 
 # Create 'sim_1' fileset (if not found)
 if {[string equal [get_filesets -quiet sim_1] ""]} {
@@ -303,71 +372,78 @@ set_property -name "file_type" -value "VHDL" -objects $file_obj
 # Set 'sim_1' fileset properties
 set obj [get_filesets sim_1]
 set_property -name "nl.mode" -value "funcsim" -objects $obj
-set_property -name "sim_mode" -value "post-synthesis" -objects $obj
 set_property -name "top" -value "TB_imu_logic" -objects $obj
 set_property -name "top_auto_set" -value "0" -objects $obj
 set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
 
+# Create 'block_sim' fileset (if not found)
+if {[string equal [get_filesets -quiet block_sim] ""]} {
+  create_fileset -simset block_sim
+}
+
+# Set 'block_sim' fileset object
+set obj [get_filesets block_sim]
+set files [list \
+ [file normalize "${origin_dir}/sim/TB_imu_bram2uart.v"] \
+ [file normalize "${origin_dir}/sim/TB_imu_controller.v"] \
+ [file normalize "${origin_dir}/sim_cfg/TB_imu_controller_behav.wcfg"] \
+ [file normalize "${origin_dir}/sim/TB_imu_logic.vhd"] \
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'block_sim' fileset file properties for remote files
+set file "$origin_dir/sim/TB_imu_logic.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets block_sim] [list "*$file"]]
+set_property -name "file_type" -value "VHDL" -objects $file_obj
+
+
+# Set 'block_sim' fileset file properties for local files
+# None
+
+# Set 'block_sim' fileset properties
+set obj [get_filesets block_sim]
+set_property -name "top" -value "TB_imu_bram2uart" -objects $obj
+set_property -name "top_auto_set" -value "0" -objects $obj
+set_property -name "top_lib" -value "xil_defaultlib" -objects $obj
+set_property -name "xsim.simulate.runtime" -value "1ms" -objects $obj
+
 # Set 'utils_1' fileset object
 set obj [get_filesets utils_1]
-# Add local files from the original project (-no_copy_sources specified)
-set files [list \
- [file normalize "${origin_dir}/vivado_project/imu2nn.srcs/utils_1/imports/synth_1/debounce.dcp" ]\
-]
-set added_files [add_files -fileset utils_1 $files]
-
 # Set 'utils_1' fileset file properties for remote files
 # None
 
 # Set 'utils_1' fileset file properties for local files
-set file "synth_1/debounce.dcp"
-set file_obj [get_files -of_objects [get_filesets utils_1] [list "*$file"]]
-set_property -name "netlist_only" -value "0" -objects $file_obj
-
+# None
 
 # Set 'utils_1' fileset properties
 set obj [get_filesets utils_1]
 
 
 # Adding sources referenced in BDs, if not already added
-if { [get_files addr_mapping.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/addr_mapping.vhd"
-}
-if { [get_files imu_addr.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/imu_addr.vhd"
-}
 if { [get_files imu2bram.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/imu2bram.vhd"
-}
-if { [get_files clk_divider.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
-}
-if { [get_files debounce.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/debounce.vhd"
 }
 if { [get_files spi_imu_interface.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/spi_imu_interface.vhd"
 }
-if { [get_files addr_mapping.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/addr_mapping.vhd"
+if { [get_files clk_divider.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
 }
-if { [get_files imu_addr.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/imu_addr.vhd"
+if { [get_files imu_controller.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/imu_controller.vhd"
 }
 if { [get_files imu2bram.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/imu2bram.vhd"
 }
-if { [get_files clk_divider.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
-}
-if { [get_files debounce.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/debounce.vhd"
-}
-if { [get_files clk_divider.vhd] == "" } {
-  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
-}
 if { [get_files spi_imu_interface.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/spi_imu_interface.vhd"
+}
+if { [get_files clk_divider.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
+}
+if { [get_files imu_controller.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/imu_controller.vhd"
 }
 
 
@@ -375,7 +451,7 @@ if { [get_files spi_imu_interface.vhd] == "" } {
 proc cr_bd_imu_logic { parentCell } {
 # The design that will be created by this Tcl proc contains the following 
 # module references:
-# clk_divider, imu2bram, imu_addr, debounce, spi_imu_interface
+# imu2bram, imu_controller, clk_divider_bd, spi_imu_interface
 
 
 
@@ -393,10 +469,9 @@ proc cr_bd_imu_logic { parentCell } {
   set bCheckModules 1
   if { $bCheckModules == 1 } {
      set list_check_mods "\ 
-  clk_divider\
   imu2bram\
-  imu_addr\
-  debounce\
+  imu_controller\
+  clk_divider_bd\
   spi_imu_interface\
   "
 
@@ -451,28 +526,18 @@ proc cr_bd_imu_logic { parentCell } {
   # Create interface ports
 
   # Create ports
-  set addr_bram [ create_bd_port -dir O -from 12 -to 0 addr_bram ]
+  set addr_bram [ create_bd_port -dir O -from 5 -to 0 addr_bram ]
   set ck_miso [ create_bd_port -dir I ck_miso ]
   set ck_mosi [ create_bd_port -dir O ck_mosi ]
   set ck_sck [ create_bd_port -dir O ck_sck ]
   set ck_ss [ create_bd_port -dir O ck_ss ]
   set clk [ create_bd_port -dir I -type clk -freq_hz 125000000 clk ]
   set data_bram [ create_bd_port -dir O -from 15 -to 0 data_bram ]
+  set en [ create_bd_port -dir I en ]
+  set get_data_flag [ create_bd_port -dir O get_data_flag ]
   set rst [ create_bd_port -dir I rst ]
+  set usr_bank [ create_bd_port -dir O -from 1 -to 0 usr_bank ]
   set we [ create_bd_port -dir O -from 1 -to 0 we ]
-
-  # Create instance: clk_divider_0, and set properties
-  set block_name clk_divider
-  set block_cell_name clk_divider_0
-  if { [catch {set clk_divider_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $clk_divider_0 eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-    set_property CONFIG.out_freq {2000000} $clk_divider_0
-
 
   # Create instance: imu2bram_0, and set properties
   set block_name imu2bram
@@ -484,29 +549,33 @@ proc cr_bd_imu_logic { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
-  # Create instance: imu_addr_0, and set properties
-  set block_name imu_addr
-  set block_cell_name imu_addr_0
-  if { [catch {set imu_addr_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+    set_property CONFIG.bram_addr_width {6} $imu2bram_0
+
+
+  # Create instance: imu_controller_0, and set properties
+  set block_name imu_controller
+  set block_cell_name imu_controller_0
+  if { [catch {set imu_controller_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
-   } elseif { $imu_addr_0 eq "" } {
+   } elseif { $imu_controller_0 eq "" } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
   
-  # Create instance: reset_debounce, and set properties
-  set block_name debounce
-  set block_cell_name reset_debounce
-  if { [catch {set reset_debounce [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+  # Create instance: spi_clk, and set properties
+  set block_name clk_divider_bd
+  set block_cell_name spi_clk
+  if { [catch {set spi_clk [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
-   } elseif { $reset_debounce eq "" } {
+   } elseif { $spi_clk eq "" } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+    set_property CONFIG.out_freq {2000000} $spi_clk
+
+
   # Create instance: spi_imu_interface_0, and set properties
   set block_name spi_imu_interface
   set block_cell_name spi_imu_interface_0
@@ -519,21 +588,25 @@ proc cr_bd_imu_logic { parentCell } {
    }
   
   # Create port connections
-  connect_bd_net -net Clk5Mhz_clk_div [get_bd_pins clk_divider_0/clk_div] [get_bd_pins imu2bram_0/clk] [get_bd_pins spi_imu_interface_0/clk]
+  connect_bd_net -net Clk5Mhz_clk_div [get_bd_pins imu2bram_0/clk] [get_bd_pins spi_clk/clk_div] [get_bd_pins spi_imu_interface_0/clk]
   connect_bd_net -net ck_miso_1 [get_bd_ports ck_miso] [get_bd_pins spi_imu_interface_0/MISO]
-  connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins clk_divider_0/clk] [get_bd_pins imu_addr_0/clk] [get_bd_pins reset_debounce/clk]
+  connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins imu_controller_0/clk] [get_bd_pins spi_clk/clk]
+  connect_bd_net -net en_1 [get_bd_ports en] [get_bd_pins imu_controller_0/en]
   connect_bd_net -net imu2bram_0_addr_bram [get_bd_ports addr_bram] [get_bd_pins imu2bram_0/addr_bram]
   connect_bd_net -net imu2bram_0_data_bram [get_bd_ports data_bram] [get_bd_pins imu2bram_0/data_bram]
   connect_bd_net -net imu2bram_0_we [get_bd_ports we] [get_bd_pins imu2bram_0/we]
-  connect_bd_net -net imu_addr_0_addr [get_bd_pins imu_addr_0/addr] [get_bd_pins spi_imu_interface_0/addr]
-  connect_bd_net -net reset_debounce_debounce_sig [get_bd_pins clk_divider_0/rst] [get_bd_pins imu_addr_0/rst] [get_bd_pins reset_debounce/debounce_sig] [get_bd_pins spi_imu_interface_0/rst]
-  connect_bd_net -net rst_1 [get_bd_ports rst] [get_bd_pins reset_debounce/sig]
+  connect_bd_net -net imu_controller_0_get_data [get_bd_ports get_data_flag] [get_bd_pins imu_controller_0/get_data]
+  connect_bd_net -net imu_controller_0_message [get_bd_pins imu_controller_0/message] [get_bd_pins spi_imu_interface_0/message]
+  connect_bd_net -net imu_controller_0_new_msg [get_bd_pins imu_controller_0/new_msg] [get_bd_pins spi_imu_interface_0/new_message]
+  connect_bd_net -net imu_controller_0_usr_bank [get_bd_ports usr_bank] [get_bd_pins imu2bram_0/usr_bank] [get_bd_pins imu_controller_0/usr_bank]
+  connect_bd_net -net reset_debounce_debounce_sig [get_bd_ports rst] [get_bd_pins imu_controller_0/rst] [get_bd_pins spi_clk/rst] [get_bd_pins spi_imu_interface_0/rst]
   connect_bd_net -net spi_imu_interface_0_CS [get_bd_ports ck_ss] [get_bd_pins spi_imu_interface_0/CS]
   connect_bd_net -net spi_imu_interface_0_MOSI [get_bd_ports ck_mosi] [get_bd_pins spi_imu_interface_0/MOSI]
   connect_bd_net -net spi_imu_interface_0_SCLK [get_bd_ports ck_sck] [get_bd_pins spi_imu_interface_0/SCLK]
   connect_bd_net -net spi_imu_interface_0_addr_out [get_bd_pins imu2bram_0/addr_imu] [get_bd_pins spi_imu_interface_0/addr_out]
-  connect_bd_net -net spi_imu_interface_0_data [get_bd_pins imu2bram_0/data_imu] [get_bd_pins spi_imu_interface_0/data]
-  connect_bd_net -net spi_imu_interface_0_data_ready [get_bd_pins imu2bram_0/new_data] [get_bd_pins imu_addr_0/inc] [get_bd_pins spi_imu_interface_0/data_ready]
+  connect_bd_net -net spi_imu_interface_0_data [get_bd_pins imu2bram_0/data_imu] [get_bd_pins imu_controller_0/response] [get_bd_pins spi_imu_interface_0/response]
+  connect_bd_net -net spi_imu_interface_0_data_ready [get_bd_pins imu2bram_0/new_data] [get_bd_pins imu_controller_0/data_ready] [get_bd_pins spi_imu_interface_0/data_ready]
+  connect_bd_net -net spi_imu_interface_0_output_valid [get_bd_pins imu2bram_0/data_valid] [get_bd_pins spi_imu_interface_0/output_valid]
 
   # Create address segments
 
@@ -553,13 +626,46 @@ set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files imu_logic.bd ]
 if { [get_files ps_bram_addr_fix.vhd] == "" } {
   import_files -quiet -fileset sources_1 "$origin_dir/src/ps_bram_addr_fix.vhd"
 }
+if { [get_files clk_divider.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
+}
+if { [get_files debounce.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/debounce.vhd"
+}
+if { [get_files clk_divider.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
+}
+if { [get_files debounce.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/debounce.vhd"
+}
+if { [get_files clk_divider.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
+}
+if { [get_files debounce.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/debounce.vhd"
+}
+if { [get_files fix_address.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/fix_address.vhd"
+}
+if { [get_files nn_ctrl.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/nn_ctrl.vhd"
+}
+if { [get_files clk_divider.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/clk_divider.vhd"
+}
+if { [get_files uart_module.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/uart_module.vhd"
+}
+if { [get_files imu_bram2uart.vhd] == "" } {
+  import_files -quiet -fileset sources_1 "$origin_dir/src/imu_bram2uart.vhd"
+}
 
 
 # Proc to create BD imu2nn
 proc cr_bd_imu2nn { parentCell } {
 # The design that will be created by this Tcl proc contains the following 
 # module references:
-# ps_bram_addr_fix
+# debounce, debounce, debounce, fix_address, nn_ctrl, ps_bram_addr_fix, imu_bram2uart
 
 
 # The design that will be created by this Tcl proc contains the following 
@@ -582,9 +688,12 @@ proc cr_bd_imu2nn { parentCell } {
   set bCheckIPs 1
   if { $bCheckIPs == 1 } {
      set list_check_ips "\ 
+  xilinx.com:ip:clk_wiz:6.0\
   xilinx.com:ip:blk_mem_gen:8.4\
-  xilinx.com:ip:xlslice:1.0\
+  xilinx.com:hls:nn_inference:1.0\
+  xilinx.com:ip:util_vector_logic:2.0\
   xilinx.com:ip:axi_bram_ctrl:4.1\
+  xilinx.com:ip:axi_gpio:2.0\
   xilinx.com:ip:smartconnect:1.0\
   xilinx.com:ip:processing_system7:5.5\
   xilinx.com:ip:proc_sys_reset:5.0\
@@ -613,7 +722,13 @@ proc cr_bd_imu2nn { parentCell } {
   set bCheckModules 1
   if { $bCheckModules == 1 } {
      set list_check_mods "\ 
+  debounce\
+  debounce\
+  debounce\
+  fix_address\
+  nn_ctrl\
   ps_bram_addr_fix\
+  imu_bram2uart\
   "
 
    set list_mods_missing ""
@@ -676,6 +791,100 @@ proc cr_bd_imu2nn { parentCell } {
   }
 
   
+# Hierarchical cell: data_collect
+proc create_hier_cell_data_collect { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_data_collect() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+
+  # Create pins
+  create_bd_pin -dir I active_bit
+  create_bd_pin -dir I -from 5 -to 0 addra
+  create_bd_pin -dir I -type clk clk
+  create_bd_pin -dir I -from 15 -to 0 dina
+  create_bd_pin -dir I get_data_flag
+  create_bd_pin -dir I -type rst rst
+  create_bd_pin -dir O uart_tx
+  create_bd_pin -dir I -from 1 -to 0 wea
+
+  # Create instance: imu_bram2uart_0, and set properties
+  set block_name imu_bram2uart
+  set block_cell_name imu_bram2uart_0
+  if { [catch {set imu_bram2uart_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $imu_bram2uart_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+    set_property CONFIG.bram_addr_width {6} $imu_bram2uart_0
+
+
+  # Create instance: uart_bram, and set properties
+  set uart_bram [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 uart_bram ]
+  set_property -dict [list \
+    CONFIG.Byte_Size {8} \
+    CONFIG.Enable_32bit_Address {false} \
+    CONFIG.Enable_A {Always_Enabled} \
+    CONFIG.Enable_B {Use_ENB_Pin} \
+    CONFIG.Memory_Type {Simple_Dual_Port_RAM} \
+    CONFIG.Operating_Mode_A {WRITE_FIRST} \
+    CONFIG.Register_PortB_Output_of_Memory_Primitives {false} \
+    CONFIG.Use_Byte_Write_Enable {true} \
+    CONFIG.Use_RSTB_Pin {false} \
+    CONFIG.Write_Depth_A {64} \
+    CONFIG.Write_Width_A {16} \
+    CONFIG.use_bram_block {Stand_Alone} \
+  ] $uart_bram
+
+
+  # Create port connections
+  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins imu_bram2uart_0/clk] [get_bd_pins uart_bram/clka] [get_bd_pins uart_bram/clkb]
+  connect_bd_net -net debounce_0_debounce_sig [get_bd_pins active_bit] [get_bd_pins imu_bram2uart_0/active_bit]
+  connect_bd_net -net imu2bram_0_addr_bram [get_bd_pins addra] [get_bd_pins uart_bram/addra]
+  connect_bd_net -net imu2bram_0_data_bram [get_bd_pins dina] [get_bd_pins uart_bram/dina]
+  connect_bd_net -net imu2bram_0_we [get_bd_pins wea] [get_bd_pins uart_bram/wea]
+  connect_bd_net -net imu_bram2uart_0_addr_bram [get_bd_pins imu_bram2uart_0/addr_bram] [get_bd_pins uart_bram/addrb]
+  connect_bd_net -net imu_bram2uart_0_en_bram [get_bd_pins imu_bram2uart_0/en_bram] [get_bd_pins uart_bram/enb]
+  connect_bd_net -net imu_bram2uart_0_tx_uart [get_bd_pins uart_tx] [get_bd_pins imu_bram2uart_0/tx_uart]
+  connect_bd_net -net imu_logic_0_get_data_flag [get_bd_pins get_data_flag] [get_bd_pins imu_bram2uart_0/imu_get_data]
+  connect_bd_net -net nn_bram_doutb [get_bd_pins imu_bram2uart_0/data_bram] [get_bd_pins uart_bram/doutb]
+  connect_bd_net -net rst_debounce_debounce_sig [get_bd_pins rst] [get_bd_pins imu_bram2uart_0/rst]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+  
 # Hierarchical cell: PS_system
 proc create_hier_cell_PS_system { parentCell nameHier } {
 
@@ -711,23 +920,32 @@ proc create_hier_cell_PS_system { parentCell nameHier } {
   current_bd_instance $hier_obj
 
   # Create interface pins
-  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:bram_rtl:1.0 BRAM_PORTA
-
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:ddrx_rtl:1.0 DDR
 
   create_bd_intf_pin -mode Master -vlnv xilinx.com:display_processing_system7:fixedio_rtl:1.0 FIXED_IO
 
 
   # Create pins
+  create_bd_pin -dir I -from 5 -to 0 addr_in
+  create_bd_pin -dir I -type clk clk
+  create_bd_pin -dir I -from 15 -to 0 data_in
+  create_bd_pin -dir I -from 31 -to 0 gpio_io_i
+  create_bd_pin -dir I -from 1 -to 0 we_in
 
   # Create instance: axi_bram_ctrl_0, and set properties
   set axi_bram_ctrl_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_0 ]
   set_property CONFIG.SINGLE_PORT_BRAM {1} $axi_bram_ctrl_0
 
 
+  # Create instance: axi_gpio_0, and set properties
+  set axi_gpio_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_0 ]
+
   # Create instance: axi_smc, and set properties
   set axi_smc [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 axi_smc ]
-  set_property CONFIG.NUM_SI {1} $axi_smc
+  set_property -dict [list \
+    CONFIG.NUM_MI {2} \
+    CONFIG.NUM_SI {1} \
+  ] $axi_smc
 
 
   # Create instance: processing_system7_0, and set properties
@@ -1095,7 +1313,7 @@ proc create_hier_cell_PS_system { parentCell nameHier } {
     CONFIG.PCW_PACKAGE_NAME {clg400} \
     CONFIG.PCW_PCAP_PERIPHERAL_CLKSRC {IO PLL} \
     CONFIG.PCW_PCAP_PERIPHERAL_FREQMHZ {200} \
-    CONFIG.PCW_PERIPHERAL_BOARD_PRESET {None} \
+    CONFIG.PCW_PERIPHERAL_BOARD_PRESET {part0} \
     CONFIG.PCW_PLL_BYPASSMODE_ENABLE {0} \
     CONFIG.PCW_PRESET_BANK0_VOLTAGE {LVCMOS 3.3V} \
     CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 1.8V} \
@@ -1263,32 +1481,61 @@ proc create_hier_cell_PS_system { parentCell nameHier } {
   ] $processing_system7_0
 
 
+  # Create instance: ps_bram_addr_fix_0, and set properties
+  set block_name ps_bram_addr_fix
+  set block_cell_name ps_bram_addr_fix_0
+  if { [catch {set ps_bram_addr_fix_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $ps_bram_addr_fix_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+    set_property CONFIG.addr_width {6} $ps_bram_addr_fix_0
+
+
+  # Create instance: ps_bram_block, and set properties
+  set ps_bram_block [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 ps_bram_block ]
+  set_property CONFIG.Memory_Type {True_Dual_Port_RAM} $ps_bram_block
+
+
   # Create instance: rst_ps7_0_50M, and set properties
   set rst_ps7_0_50M [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_ps7_0_50M ]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net axi_bram_ctrl_0_BRAM_PORTA [get_bd_intf_pins BRAM_PORTA] [get_bd_intf_pins axi_bram_ctrl_0/BRAM_PORTA]
+  connect_bd_intf_net -intf_net axi_bram_ctrl_0_BRAM_PORTA [get_bd_intf_pins axi_bram_ctrl_0/BRAM_PORTA] [get_bd_intf_pins ps_bram_block/BRAM_PORTA]
   connect_bd_intf_net -intf_net axi_smc_M00_AXI [get_bd_intf_pins axi_bram_ctrl_0/S_AXI] [get_bd_intf_pins axi_smc/M00_AXI]
+  connect_bd_intf_net -intf_net axi_smc_M01_AXI [get_bd_intf_pins axi_gpio_0/S_AXI] [get_bd_intf_pins axi_smc/M01_AXI]
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_pins DDR] [get_bd_intf_pins processing_system7_0/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_FIXED_IO [get_bd_intf_pins FIXED_IO] [get_bd_intf_pins processing_system7_0/FIXED_IO]
   connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_pins axi_smc/S00_AXI] [get_bd_intf_pins processing_system7_0/M_AXI_GP0]
 
   # Create port connections
-  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins axi_bram_ctrl_0/s_axi_aclk] [get_bd_pins axi_smc/aclk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins rst_ps7_0_50M/slowest_sync_clk]
+  connect_bd_net -net addr_in_1 [get_bd_pins addr_in] [get_bd_pins ps_bram_addr_fix_0/addr_in]
+  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins ps_bram_block/clkb]
+  connect_bd_net -net data_in_1 [get_bd_pins data_in] [get_bd_pins ps_bram_addr_fix_0/data_in]
+  connect_bd_net -net gpio_io_i_1 [get_bd_pins gpio_io_i] [get_bd_pins axi_gpio_0/gpio_io_i]
+  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins axi_bram_ctrl_0/s_axi_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_smc/aclk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins rst_ps7_0_50M/slowest_sync_clk]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins rst_ps7_0_50M/ext_reset_in]
-  connect_bd_net -net rst_ps7_0_50M_peripheral_aresetn [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins axi_smc/aresetn] [get_bd_pins rst_ps7_0_50M/peripheral_aresetn]
+  connect_bd_net -net ps_bram_addr_fix_0_addr_out [get_bd_pins ps_bram_addr_fix_0/addr_out] [get_bd_pins ps_bram_block/addrb]
+  connect_bd_net -net ps_bram_addr_fix_0_data_out [get_bd_pins ps_bram_addr_fix_0/data_out] [get_bd_pins ps_bram_block/dinb]
+  connect_bd_net -net ps_bram_addr_fix_0_en_out [get_bd_pins ps_bram_addr_fix_0/en_out] [get_bd_pins ps_bram_block/enb]
+  connect_bd_net -net ps_bram_addr_fix_0_rst_out [get_bd_pins ps_bram_addr_fix_0/rst_out] [get_bd_pins ps_bram_block/rstb]
+  connect_bd_net -net ps_bram_addr_fix_0_we_out [get_bd_pins ps_bram_addr_fix_0/we_out] [get_bd_pins ps_bram_block/web]
+  connect_bd_net -net rst_ps7_0_50M_peripheral_aresetn [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_smc/aresetn] [get_bd_pins rst_ps7_0_50M/peripheral_aresetn]
+  connect_bd_net -net we_in_1 [get_bd_pins we_in] [get_bd_pins ps_bram_addr_fix_0/we_in]
 
   # Restore current instance
   current_bd_instance $oldCurInst
 }
   
-# Hierarchical cell: PS_bram
-proc create_hier_cell_PS_bram { parentCell nameHier } {
+# Hierarchical cell: NN
+proc create_hier_cell_NN { parentCell nameHier } {
 
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_PS_bram() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_NN() - Empty argument(s)!"}
      return
   }
 
@@ -1317,46 +1564,118 @@ proc create_hier_cell_PS_bram { parentCell nameHier } {
   current_bd_instance $hier_obj
 
   # Create interface pins
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:bram_rtl:1.0 BRAM_PORTA
-
 
   # Create pins
-  create_bd_pin -dir I -from 12 -to 0 addr_in
+  create_bd_pin -dir I -from 5 -to 0 addra
   create_bd_pin -dir I -type clk clk
-  create_bd_pin -dir I -from 15 -to 0 data_in
-  create_bd_pin -dir I -from 1 -to 0 we_in
+  create_bd_pin -dir I -from 15 -to 0 dina
+  create_bd_pin -dir I imu_get_data
+  create_bd_pin -dir O -from 3 -to 0 led
+  create_bd_pin -dir O -from 31 -to 0 nn_res_out
+  create_bd_pin -dir I -from 1 -to 0 wea
 
-  # Create instance: ps_bram_addr_fix_0, and set properties
-  set block_name ps_bram_addr_fix
-  set block_cell_name ps_bram_addr_fix_0
-  if { [catch {set ps_bram_addr_fix_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+  # Create instance: clk_20MHz, and set properties
+  set clk_20MHz [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_20MHz ]
+  set_property -dict [list \
+    CONFIG.CLKIN1_JITTER_PS {80.0} \
+    CONFIG.CLKOUT1_DRIVES {BUFG} \
+    CONFIG.CLKOUT1_JITTER {172.798} \
+    CONFIG.CLKOUT1_PHASE_ERROR {96.948} \
+    CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {20.000} \
+    CONFIG.CLKOUT2_DRIVES {BUFG} \
+    CONFIG.CLKOUT3_DRIVES {BUFG} \
+    CONFIG.CLKOUT4_DRIVES {BUFG} \
+    CONFIG.CLKOUT5_DRIVES {BUFG} \
+    CONFIG.CLKOUT6_DRIVES {BUFG} \
+    CONFIG.CLKOUT7_DRIVES {BUFG} \
+    CONFIG.FEEDBACK_SOURCE {FDBK_AUTO} \
+    CONFIG.MMCM_BANDWIDTH {OPTIMIZED} \
+    CONFIG.MMCM_CLKFBOUT_MULT_F {8.000} \
+    CONFIG.MMCM_CLKIN1_PERIOD {8.000} \
+    CONFIG.MMCM_CLKIN2_PERIOD {10.000} \
+    CONFIG.MMCM_CLKOUT0_DIVIDE_F {50.000} \
+    CONFIG.MMCM_COMPENSATION {ZHOLD} \
+    CONFIG.MMCM_DIVCLK_DIVIDE {1} \
+    CONFIG.PRIMITIVE {MMCM} \
+    CONFIG.PRIM_IN_FREQ {125.000} \
+    CONFIG.PRIM_SOURCE {No_buffer} \
+    CONFIG.USE_LOCKED {false} \
+    CONFIG.USE_RESET {false} \
+  ] $clk_20MHz
+
+
+  # Create instance: fix_nn_address_0, and set properties
+  set block_name fix_address
+  set block_cell_name fix_nn_address_0
+  if { [catch {set fix_nn_address_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
-   } elseif { $ps_bram_addr_fix_0 eq "" } {
+   } elseif { $fix_nn_address_0 eq "" } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-    set_property CONFIG.addr_width {13} $ps_bram_addr_fix_0
+  
+  # Create instance: nn_bram, and set properties
+  set nn_bram [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 nn_bram ]
+  set_property -dict [list \
+    CONFIG.Byte_Size {8} \
+    CONFIG.Enable_32bit_Address {false} \
+    CONFIG.Enable_A {Always_Enabled} \
+    CONFIG.Enable_B {Use_ENB_Pin} \
+    CONFIG.Memory_Type {Simple_Dual_Port_RAM} \
+    CONFIG.Operating_Mode_A {WRITE_FIRST} \
+    CONFIG.Register_PortB_Output_of_Memory_Primitives {false} \
+    CONFIG.Use_Byte_Write_Enable {true} \
+    CONFIG.Use_RSTB_Pin {true} \
+    CONFIG.Write_Depth_A {64} \
+    CONFIG.Write_Width_A {16} \
+    CONFIG.use_bram_block {Stand_Alone} \
+  ] $nn_bram
 
 
-  # Create instance: ps_bram_block, and set properties
-  set ps_bram_block [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 ps_bram_block ]
-  set_property CONFIG.Memory_Type {True_Dual_Port_RAM} $ps_bram_block
+  # Create instance: nn_ctrl_0, and set properties
+  set block_name nn_ctrl
+  set block_cell_name nn_ctrl_0
+  if { [catch {set nn_ctrl_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $nn_ctrl_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: nn_inference_0, and set properties
+  set nn_inference_0 [ create_bd_cell -type ip -vlnv xilinx.com:hls:nn_inference:1.0 nn_inference_0 ]
 
+  # Create instance: util_vector_logic_0, and set properties
+  set util_vector_logic_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_0 ]
+  set_property -dict [list \
+    CONFIG.C_OPERATION {not} \
+    CONFIG.C_SIZE {1} \
+  ] $util_vector_logic_0
 
-  # Create interface connections
-  connect_bd_intf_net -intf_net axi_bram_ctrl_0_BRAM_PORTA [get_bd_intf_pins BRAM_PORTA] [get_bd_intf_pins ps_bram_block/BRAM_PORTA]
 
   # Create port connections
-  connect_bd_net -net addr_in_0_1 [get_bd_pins addr_in] [get_bd_pins ps_bram_addr_fix_0/addr_in]
-  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins ps_bram_block/clkb]
-  connect_bd_net -net imu2bram_0_data_bram [get_bd_pins data_in] [get_bd_pins ps_bram_addr_fix_0/data_in]
-  connect_bd_net -net imu2bram_0_we [get_bd_pins we_in] [get_bd_pins ps_bram_addr_fix_0/we_in]
-  connect_bd_net -net ps_bram_addr_fix_0_addr_out [get_bd_pins ps_bram_addr_fix_0/addr_out] [get_bd_pins ps_bram_block/addrb]
-  connect_bd_net -net ps_bram_addr_fix_0_data_out [get_bd_pins ps_bram_addr_fix_0/data_out] [get_bd_pins ps_bram_block/dinb]
-  connect_bd_net -net ps_bram_addr_fix_0_en_out [get_bd_pins ps_bram_addr_fix_0/en_out] [get_bd_pins ps_bram_block/enb]
-  connect_bd_net -net ps_bram_addr_fix_0_rst_out [get_bd_pins ps_bram_addr_fix_0/rst_out] [get_bd_pins ps_bram_block/rstb]
-  connect_bd_net -net ps_bram_addr_fix_0_we_out [get_bd_pins ps_bram_addr_fix_0/we_out] [get_bd_pins ps_bram_block/web]
+  connect_bd_net -net clk_1 [get_bd_pins clk] [get_bd_pins clk_20MHz/clk_in1] [get_bd_pins nn_bram/clka]
+  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins clk_20MHz/clk_out1] [get_bd_pins nn_bram/clkb] [get_bd_pins nn_ctrl_0/clk] [get_bd_pins nn_inference_0/ap_clk]
+  connect_bd_net -net fix_nn_address_0_addr_out [get_bd_pins fix_nn_address_0/addr_out] [get_bd_pins nn_bram/addrb]
+  connect_bd_net -net imu2bram_0_addr_bram [get_bd_pins addra] [get_bd_pins nn_bram/addra]
+  connect_bd_net -net imu2bram_0_data_bram [get_bd_pins dina] [get_bd_pins nn_bram/dina]
+  connect_bd_net -net imu2bram_0_we [get_bd_pins wea] [get_bd_pins nn_bram/wea]
+  connect_bd_net -net imu_get_data_1 [get_bd_pins imu_get_data] [get_bd_pins nn_ctrl_0/imu_get_data]
+  connect_bd_net -net nn_bram_doutb [get_bd_pins nn_bram/doutb] [get_bd_pins nn_inference_0/input_r_q0]
+  connect_bd_net -net nn_bram_rstb_busy [get_bd_pins nn_bram/rstb_busy] [get_bd_pins nn_ctrl_0/rstb_busy]
+  connect_bd_net -net nn_ctrl_0_ap_rst [get_bd_pins nn_ctrl_0/ap_rst] [get_bd_pins util_vector_logic_0/Op1]
+  connect_bd_net -net nn_ctrl_0_ap_start [get_bd_pins nn_ctrl_0/ap_start] [get_bd_pins nn_inference_0/ap_start]
+  connect_bd_net -net nn_ctrl_0_led_ctrl [get_bd_pins led] [get_bd_pins nn_ctrl_0/led_ctrl]
+  connect_bd_net -net nn_ctrl_0_nn_res_out [get_bd_pins nn_res_out] [get_bd_pins nn_ctrl_0/nn_res_out]
+  connect_bd_net -net nn_inference_0_ap_done [get_bd_pins nn_ctrl_0/ap_done] [get_bd_pins nn_inference_0/ap_done]
+  connect_bd_net -net nn_inference_0_ap_idle [get_bd_pins nn_ctrl_0/ap_idle] [get_bd_pins nn_inference_0/ap_idle]
+  connect_bd_net -net nn_inference_0_ap_ready [get_bd_pins nn_ctrl_0/ap_ready] [get_bd_pins nn_inference_0/ap_ready]
+  connect_bd_net -net nn_inference_0_ap_return [get_bd_pins nn_ctrl_0/nn_res_in] [get_bd_pins nn_inference_0/ap_return]
+  connect_bd_net -net nn_inference_0_input_r_address0 [get_bd_pins fix_nn_address_0/addr_in] [get_bd_pins nn_inference_0/input_r_address0]
+  connect_bd_net -net nn_inference_0_input_r_ce0 [get_bd_pins nn_bram/enb] [get_bd_pins nn_inference_0/input_r_ce0]
+  connect_bd_net -net util_vector_logic_0_Res [get_bd_pins nn_inference_0/ap_rst] [get_bd_pins util_vector_logic_0/Res]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1395,20 +1714,49 @@ proc create_hier_cell_PS_bram { parentCell nameHier } {
 
 
   # Create ports
+  set active [ create_bd_port -dir I active ]
   set ck_miso [ create_bd_port -dir I ck_miso ]
   set ck_mosi [ create_bd_port -dir O ck_mosi ]
   set ck_sck [ create_bd_port -dir O ck_sck ]
   set ck_ss [ create_bd_port -dir O ck_ss ]
   set clk [ create_bd_port -dir I -type clk -freq_hz 125000000 clk ]
+  set en [ create_bd_port -dir I en ]
+  set get_data_flag [ create_bd_port -dir O get_data_flag ]
   set led [ create_bd_port -dir O -from 3 -to 0 led ]
   set rst [ create_bd_port -dir I rst ]
+  set uart_tx [ create_bd_port -dir O uart_tx ]
 
-  # Create instance: PS_bram
-  create_hier_cell_PS_bram [current_bd_instance .] PS_bram
+  # Create instance: NN
+  create_hier_cell_NN [current_bd_instance .] NN
 
   # Create instance: PS_system
   create_hier_cell_PS_system [current_bd_instance .] PS_system
 
+  # Create instance: data_collect
+  create_hier_cell_data_collect [current_bd_instance .] data_collect
+
+  # Create instance: debounce_0, and set properties
+  set block_name debounce
+  set block_cell_name debounce_0
+  if { [catch {set debounce_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $debounce_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: en_debounce, and set properties
+  set block_name debounce
+  set block_cell_name en_debounce
+  if { [catch {set en_debounce [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $en_debounce eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
   # Create instance: imu_logic_0, and set properties
   set imu_logic_0 [ create_bd_cell -type container -reference imu_logic imu_logic_0 ]
   set_property -dict [list \
@@ -1421,51 +1769,44 @@ proc create_hier_cell_PS_bram { parentCell nameHier } {
   ] $imu_logic_0
 
 
-  # Create instance: nn_bram, and set properties
-  set nn_bram [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 nn_bram ]
-  set_property -dict [list \
-    CONFIG.Byte_Size {8} \
-    CONFIG.Enable_32bit_Address {false} \
-    CONFIG.Enable_A {Always_Enabled} \
-    CONFIG.Enable_B {Use_ENB_Pin} \
-    CONFIG.Memory_Type {Simple_Dual_Port_RAM} \
-    CONFIG.Operating_Mode_A {WRITE_FIRST} \
-    CONFIG.Register_PortB_Output_of_Memory_Primitives {false} \
-    CONFIG.Use_Byte_Write_Enable {true} \
-    CONFIG.Use_RSTB_Pin {false} \
-    CONFIG.Write_Width_A {16} \
-    CONFIG.use_bram_block {Stand_Alone} \
-  ] $nn_bram
-
-
-  # Create instance: xlslice_0, and set properties
-  set xlslice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_0 ]
-  set_property -dict [list \
-    CONFIG.DIN_FROM {15} \
-    CONFIG.DIN_TO {12} \
-    CONFIG.DIN_WIDTH {16} \
-  ] $xlslice_0
-
-
+  # Create instance: rst_debounce, and set properties
+  set block_name debounce
+  set block_cell_name rst_debounce
+  if { [catch {set rst_debounce [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $rst_debounce eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
   # Create interface connections
-  connect_bd_intf_net -intf_net axi_bram_ctrl_0_BRAM_PORTA [get_bd_intf_pins PS_bram/BRAM_PORTA] [get_bd_intf_pins PS_system/BRAM_PORTA]
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins PS_system/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins PS_system/FIXED_IO]
 
   # Create port connections
+  connect_bd_net -net NN_led [get_bd_ports led] [get_bd_pins NN/led]
   connect_bd_net -net ck_miso_1 [get_bd_ports ck_miso] [get_bd_pins imu_logic_0/ck_miso]
-  connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins PS_bram/clk] [get_bd_pins imu_logic_0/clk] [get_bd_pins nn_bram/clka]
-  connect_bd_net -net imu2bram_0_addr_bram [get_bd_pins PS_bram/addr_in] [get_bd_pins imu_logic_0/addr_bram] [get_bd_pins nn_bram/addra]
-  connect_bd_net -net imu2bram_0_data_bram [get_bd_pins PS_bram/data_in] [get_bd_pins imu_logic_0/data_bram] [get_bd_pins nn_bram/dina] [get_bd_pins xlslice_0/Din]
-  connect_bd_net -net imu2bram_0_we [get_bd_pins PS_bram/we_in] [get_bd_pins imu_logic_0/we] [get_bd_pins nn_bram/wea]
+  connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins NN/clk] [get_bd_pins PS_system/clk] [get_bd_pins data_collect/clk] [get_bd_pins debounce_0/clk] [get_bd_pins en_debounce/clk] [get_bd_pins imu_logic_0/clk] [get_bd_pins rst_debounce/clk]
+  connect_bd_net -net debounce_0_debounce_sig [get_bd_pins data_collect/active_bit] [get_bd_pins debounce_0/debounce_sig]
+  connect_bd_net -net en_1 [get_bd_ports en] [get_bd_pins en_debounce/sig]
+  connect_bd_net -net en_debounce_debounce_sig [get_bd_pins en_debounce/debounce_sig] [get_bd_pins imu_logic_0/en]
+  connect_bd_net -net gpio_io_i_1 [get_bd_pins NN/nn_res_out] [get_bd_pins PS_system/gpio_io_i]
+  connect_bd_net -net imu2bram_0_addr_bram [get_bd_pins NN/addra] [get_bd_pins PS_system/addr_in] [get_bd_pins data_collect/addra] [get_bd_pins imu_logic_0/addr_bram]
+  connect_bd_net -net imu2bram_0_data_bram [get_bd_pins NN/dina] [get_bd_pins PS_system/data_in] [get_bd_pins data_collect/dina] [get_bd_pins imu_logic_0/data_bram]
+  connect_bd_net -net imu2bram_0_we [get_bd_pins NN/wea] [get_bd_pins PS_system/we_in] [get_bd_pins data_collect/wea] [get_bd_pins imu_logic_0/we]
+  connect_bd_net -net imu_bram2uart_0_tx_uart [get_bd_ports uart_tx] [get_bd_pins data_collect/uart_tx]
   connect_bd_net -net imu_logic_0_ck_mosi [get_bd_ports ck_mosi] [get_bd_pins imu_logic_0/ck_mosi]
   connect_bd_net -net imu_logic_0_ck_sck [get_bd_ports ck_sck] [get_bd_pins imu_logic_0/ck_sck]
   connect_bd_net -net imu_logic_0_ck_ss [get_bd_ports ck_ss] [get_bd_pins imu_logic_0/ck_ss]
-  connect_bd_net -net rst_1 [get_bd_ports rst] [get_bd_pins imu_logic_0/rst]
-  connect_bd_net -net xlslice_0_Dout [get_bd_ports led] [get_bd_pins xlslice_0/Dout]
+  connect_bd_net -net imu_logic_0_get_data_flag [get_bd_ports get_data_flag] [get_bd_pins NN/imu_get_data] [get_bd_pins data_collect/get_data_flag] [get_bd_pins imu_logic_0/get_data_flag]
+  connect_bd_net -net rst_1 [get_bd_ports rst] [get_bd_pins rst_debounce/sig]
+  connect_bd_net -net rst_debounce_debounce_sig [get_bd_pins data_collect/rst] [get_bd_pins imu_logic_0/rst] [get_bd_pins rst_debounce/debounce_sig]
+  connect_bd_net -net sig_0_1 [get_bd_ports active] [get_bd_pins debounce_0/sig]
 
   # Create address segments
   assign_bd_address -offset 0x40000000 -range 0x00002000 -target_address_space [get_bd_addr_spaces PS_system/processing_system7_0/Data] [get_bd_addr_segs PS_system/axi_bram_ctrl_0/S_AXI/Mem0] -force
+  assign_bd_address -offset 0x41200000 -range 0x00010000 -target_address_space [get_bd_addr_spaces PS_system/processing_system7_0/Data] [get_bd_addr_segs PS_system/axi_gpio_0/S_AXI/Reg] -force
 
 
   # Restore current instance
@@ -1487,21 +1828,6 @@ make_wrapper -files [get_files imu2nn.bd] -import -top
 
 # Create wrapper file for imu_logic.bd
 make_wrapper -files [get_files imu_logic.bd] -import -top
-
-generate_target all [get_files imu2nn.bd]
-
-# Set 'imu_logic_inst_1' fileset object
-set obj [get_filesets imu_logic_inst_1]
-# Set 'imu_logic_inst_1' fileset file properties for remote files
-# None
-
-# Set 'imu_logic_inst_1' fileset file properties for local files
-# None
-
-# Set 'imu_logic_inst_1' fileset properties
-set obj [get_filesets imu_logic_inst_1]
-set_property -name "top" -value "imu_logic_inst_1" -objects $obj
-set_property -name "top_auto_set" -value "0" -objects $obj
 
 set idrFlowPropertiesConstraints ""
 catch {
@@ -1529,8 +1855,6 @@ if { $obj != "" } {
 
 }
 set obj [get_runs synth_1]
-set_property -name "needs_refresh" -value "1" -objects $obj
-set_property -name "incremental_checkpoint" -value "$proj_dir/imu2nn.srcs/utils_1/imports/synth_1/debounce.dcp" -objects $obj
 set_property -name "auto_incremental_checkpoint" -value "1" -objects $obj
 set_property -name "strategy" -value "Vivado Synthesis Defaults" -objects $obj
 
@@ -1753,7 +2077,6 @@ set_property -name "options.warn_on_violation" -value "1" -objects $obj
 
 }
 set obj [get_runs impl_1]
-set_property -name "needs_refresh" -value "1" -objects $obj
 set_property -name "strategy" -value "Vivado Implementation Defaults" -objects $obj
 set_property -name "steps.write_bitstream.args.readback_file" -value "0" -objects $obj
 set_property -name "steps.write_bitstream.args.verbose" -value "0" -objects $obj
