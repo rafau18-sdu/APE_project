@@ -11,13 +11,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="3,977.849437 us"></ZoomStartTime>
-      <ZoomEndTime time="11,832.849438 us"></ZoomEndTime>
-      <Cursor1Time time="5,279.996910 us"></Cursor1Time>
+      <ZoomStartTime time="20.809588897 ms"></ZoomStartTime>
+      <ZoomEndTime time="27.789588898 ms"></ZoomEndTime>
+      <Cursor1Time time="21.858024000 ms"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="180"></NameColumnWidth>
-      <ValueColumnWidth column_width="125"></ValueColumnWidth>
+      <ValueColumnWidth column_width="121"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="39" />
    <wvobject type="logic" fp_name="/TB_imu_bram2uart/clk_i">
@@ -83,6 +83,8 @@
    <wvobject type="logic" fp_name="/TB_imu_bram2uart/dut/imu_get_data">
       <obj_property name="ElementShortName">imu_get_data</obj_property>
       <obj_property name="ObjectShortName">imu_get_data</obj_property>
+      <obj_property name="CustomSignalColor">#FF0000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/TB_imu_bram2uart/dut/data_bram">
       <obj_property name="ElementShortName">data_bram[15:0]</obj_property>
@@ -91,6 +93,8 @@
    <wvobject type="array" fp_name="/TB_imu_bram2uart/dut/addr_bram">
       <obj_property name="ElementShortName">addr_bram[12:0]</obj_property>
       <obj_property name="ObjectShortName">addr_bram[12:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/TB_imu_bram2uart/dut/en_bram">
       <obj_property name="ElementShortName">en_bram</obj_property>
@@ -99,6 +103,8 @@
    <wvobject type="logic" fp_name="/TB_imu_bram2uart/dut/tx_uart">
       <obj_property name="ElementShortName">tx_uart</obj_property>
       <obj_property name="ObjectShortName">tx_uart</obj_property>
+      <obj_property name="CustomSignalColor">#FFFF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="other" fp_name="/TB_imu_bram2uart/dut/current_state">
       <obj_property name="ElementShortName">current_state</obj_property>
@@ -135,6 +141,8 @@
    <wvobject type="logic" fp_name="/TB_imu_bram2uart/dut/clk_uart_bufg">
       <obj_property name="ElementShortName">clk_uart_bufg</obj_property>
       <obj_property name="ObjectShortName">clk_uart_bufg</obj_property>
+      <obj_property name="CustomSignalColor">#00FF00</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/TB_imu_bram2uart/dut/data_send_uart">
       <obj_property name="ElementShortName">data_send_uart</obj_property>
@@ -144,6 +152,8 @@
       <obj_property name="ElementShortName">data_uart[7:0]</obj_property>
       <obj_property name="ObjectShortName">data_uart[7:0]</obj_property>
       <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/TB_imu_bram2uart/dut/new_data_uart">
       <obj_property name="ElementShortName">new_data_uart</obj_property>

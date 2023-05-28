@@ -43,6 +43,7 @@ module TB_imu_bram2uart;
         .clk (clk_i),
         .rst (rst_i),
         .imu_get_data (imu_get_data_i),
+        .active_bit (1),
         .data_bram (data_bram_i),
         .addr_bram (addr_bram_o),
         .en_bram (en_bram_o),
@@ -60,7 +61,7 @@ module TB_imu_bram2uart;
         
         #1;
         
-        #500000;
+        #5000000;
         
         imu_get_data_int <= 1;
         
@@ -79,7 +80,7 @@ module TB_imu_bram2uart;
             
             if (addr_bram_o == 5)
             begin
-                #500000;
+                #5000000;
         
                 imu_get_data_int <= 1;
                 

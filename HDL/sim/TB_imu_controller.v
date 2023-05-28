@@ -56,19 +56,17 @@ module TB_imu_controller;
         
         en_int <= 1;
         
-        repeat(20)
+        repeat(50)
         begin
         
             @(posedge new_msg_o);
+            
+            data_ready_int <= 0;
         
             #(20*IMU_PER)
             
             data_ready_int <= 1;
             
-            #IMU_PER
-            
-            data_ready_int <= 0;
-          
         end
         
         #(IMU_PER*20) $finish;

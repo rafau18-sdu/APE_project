@@ -25,7 +25,7 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 entity nn_ctrl is
-    Port (  i_Clk : in STD_LOGIC;
+    Port (  clk : in STD_LOGIC;
             ap_ready : in STD_LOGIC;
             ap_start : out STD_LOGIC;
             ap_done  : in std_logic;
@@ -33,12 +33,12 @@ entity nn_ctrl is
             ap_rst   : out std_logic;
             rstb_busy: in std_logic;
             
-            led_ctrl1: out std_logic;
-            led_ctrl2: out std_logic;
-            led_ctrl3: out std_logic;
-            led_ctrl4: out std_logic;
+            imu_get_data : in std_logic; 
             
-            nn_res_in: in  std_logic_vector(31 downto 0)
+            led_ctrl: out std_logic_vector(3 downto 0) := (others => '0');
+            
+            nn_res_in: in  std_logic_vector(31 downto 0);
+            nn_res_out: out  std_logic_vector(31 downto 0) := (others => '0')
            
            );
 end nn_ctrl;
@@ -46,64 +46,58 @@ end nn_ctrl;
 architecture Behavioral of nn_ctrl is
 
     signal start_signal :   std_logic := '0';
-    signal s_led_ctrl1  :   std_logic := '0';
-    signal s_led_ctrl2  :   std_logic := '0';  
-    signal s_led_ctrl3  :   std_logic := '0';
-    signal s_led_ctrl4  :   std_logic := '0';
-    
-    signal led_ctrl     :   std_logic_vector(3 downto 0);
     
     signal pred         :   integer := 0;
+    
+    signal imu_get_data_shift : STD_LOGIC_VECTOR(1 downto 0) := (others => '0');
     
 begin
 
     ------------------  Start NN  ------------------
-    PROCESS(i_Clk, start_signal)
-      VARIABLE cnt : INTEGER := 0;
+    PROCESS(clk)
     BEGIN
-        if rising_edge(i_Clk) then
-            if cnt < 3 then
-                cnt := cnt + 1;
-            end if;
-        end if;
-        
-        if cnt > 2 then
-            if ap_ready = '1' or ap_idle = '1' then
-                if rstb_busy = '0' then
-                    start_signal <= '1';
-                else 
-                    start_signal <= '0';
+        if rising_edge(clk) then
+            imu_get_data_shift <= imu_get_data_shift(0) & imu_get_data;
+            
+            if imu_get_data_shift = "10" then
+                if ap_ready = '1' or ap_idle = '1' then
+                    if rstb_busy = '0' then
+                        start_signal <= '1';
+                    else 
+                        start_signal <= '0';
+                    end if;
                 end if;
             end if;
         end if;
     END PROCESS;
-
-
-    pred <= to_integer(signed(nn_res_in));
+    
+    -- Get output
+    PROCESS(clk)
+    BEGIN
+        if rising_edge(clk) then
+            if ap_done = '1' then
+                pred <= to_integer(signed(nn_res_in));
+                nn_res_out <= nn_res_in;
+            end if;
+        end if;
+    END PROCESS;
 
     with pred select led_ctrl <=
-        "0001" when 1,
-        "0010" when 2,
-        "0011" when 3,
-        "0100" when 4,
-        "0101" when 5,
-        "0110" when 6,
-        "0111" when 7,
-        "1000" when 8,
-        "1001" when 9,
-        "1010" when 0,
-        "1110" when -1,
-        "1111" when 15,
+        "0001" when 0,
+        "0010" when 1,
+        "0011" when 7,
+        "0100" when 2,
+        "0101" when 4,
+        "0110" when 5,
+        "0111" when 6,
+        "1000" when 3,
+        "1001" when 8,
+        "1010" when 9,
         "0000" when others;
         
 
     ap_start <= start_signal;
 
     ap_rst <= '1';
-    
-    led_ctrl1 <= led_ctrl(0);
-    led_ctrl2 <= led_ctrl(1);
-    led_ctrl3 <= led_ctrl(2);
-    led_ctrl4 <= led_ctrl(3);
     
 end Behavioral;
