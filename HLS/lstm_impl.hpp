@@ -2,26 +2,26 @@
 #ifndef LSTM_IMPL_H
 #define LSTM_IMPL_H
 
-#include "ap_int.h"
+//#include "ap_int.h"
 #include <cstdint>
 #include "ap_fixed.h"
 
-typedef ap_fixed<32, 24> data_t;
-typedef ap_fixed<64, 24> resize_t;
+//typedef ap_fixed<32, 8> data_t;
+typedef float data_t;
 
 // Include weights.
 #include "weights/layer_0_weights.txt"
 #include "weights/layer_1_weights.txt"
 #include "weights/layer_2_weights.txt"
 
-const int layer_0_units = layer_0_recurrent_kernel_size_0;
-const int layer_1_units = layer_1_recurrent_kernel_size_0;
-const int layer_2_units = layer_2_kernel_size;
+#define layer_0_units layer_0_recurrent_kernel_size_0
+#define layer_1_units layer_1_recurrent_kernel_size_0
+#define layer_2_units layer_2_kernel_size
 
 /**
  * @brief	Convert from integer to fixed point with descaling.
  */
-void int_to_fixed(int16_t input[layer_0_input_size], data_t output[layer_0_input_size], const int scale);
+void int_to_fixed(int16_t input[layer_0_input_size], data_t output[layer_0_input_size]);
 
 /**
  * @brief	Hard sigmoid see: https://www.tensorflow.org/api_docs/python/tf/keras/activations/hard_sigmoid
@@ -48,11 +48,13 @@ void dense_layer_2(data_t input[layer_2_input_size],
 		const data_t bias[layer_2_bias_size],
 		data_t output[layer_2_kernel_size]);
 
+void soft_max(data_t input[layer_2_units], data_t output[layer_2_units]);
+
 /* Find highest output */
 void find_category(data_t input[layer_2_units], int &pred);
 
 /* Connect NN Layers */
-int nn_inference(float input[layer_0_input_size]);
+int nn_inference(int16_t input[layer_0_input_size]);
 
 #endif
 

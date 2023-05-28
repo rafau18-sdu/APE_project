@@ -4,13 +4,13 @@
 
 int main() {
 
-data_t input[layer_0_input_size] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5}; // 1
+	int16_t input[layer_0_input_size] = {5, 5, 5, 5, 5, 5}; // 1
 
-for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 10; ++i) {
 
-int pred = nn_inference(input_img);
-	std::cout << "NN Prediction: " << pred << "\n";
-}
+		int pred = nn_inference(input);
+		std::cout << "NN Prediction: " << pred << "\n";
+	}
 
-return 0;
+	return 0;
 }
