@@ -17,7 +17,7 @@ Tested with:
 ## 1) Train network
 - Start `APE_project.ipynb` in a Google colab session or any local session set up with Tensorflow.
 - Run script from beginning.
-- When script asks to choose file to upload choose \<git repo>/neural_network_design/data.zip
+- When script asks to choose file to upload choose [``data.zip``](/neural_network_design/data.zip)
 - Prints information regarding the network such as training progress, an overview of the network structure, test accuracy, and a random test inference result at the end.
 - Should generate several .txt files containing the weights of the network.
 - Download zip file with weights and extract in \<git repo>/HLS/
