@@ -5,3 +5,5 @@ SW/vitis_project/
 **.vscode
 
 **lstm_implementation/
+
+HDL/custom_ip/*/
