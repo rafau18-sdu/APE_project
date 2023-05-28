@@ -5,6 +5,7 @@
 #include "xil_io.h"
 #include "xuartps.h"
 #include "xbram.h"
+#include "xgpio.h"
 #include "xparameters.h"
 #include <unistd.h>
 
@@ -12,6 +13,10 @@
 #define NUM_INPUTS		100 					// number of pixel in input image
 #define BYTES_PR_INPUT		4 					// 32 bit float = 4 bytes
 #define BASE_ADDR		XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR	// from xparameters.h
+
+#define GPIO_DEVICE_ID  XPAR_GPIO_0_DEVICE_ID
+
+#define GPIO_CHANNEL 1
 
 #define ACC_SENS 	2048 //16384
 #define GYRO_SENS 	32.8 //131
@@ -25,6 +30,8 @@ XBram             	x_bram;
 XBram_Config    	*px_config;
 XUartPs_Config 		*Config_0;
 XUartPs 			Uart_PS_0;
+
+XGpio Gpio_nn;
 
 uint8_t 		ucAXIInit();
 int				xuartps_init();
@@ -48,63 +55,46 @@ void print_help() {
 	print("13: gyro z off\n");
 }
 
-int main()
-{
-    init_platform();
+void debug() {
 
-    print("\n\rInitializing..\n\r");
-
-    sleep(1);
-
-	ucAXIInit();
-
-	xuartps_init();
-
-	//uint8_t ram_position = 0;
-
-	//uint8_t BufferPtr_rx[NUM_INPUTS*BYTES_PR_INPUT] = {0x00};
-
-	//int Status = 0;
-	//int tempInt;
-	//float tempFloat = 0.0;
 	print_help();
 
-    while(1)
-    {
+	while(1)
+	{
 
-    	print("\nReady to give value\n");
+		print("\nReady to give value\n");
 
-    	uint8_t ram_position = 0;
-    	uint8_t ram_valid = 1;
+		uint8_t ram_position = 0;
+		uint8_t ram_valid = 1;
 
-    	while (1) {
-    		uint8_t rx_byte = XUartPs_RecvByte(XPAR_XUARTPS_0_BASEADDR); // read UART
+		while (1) {
+			uint8_t rx_byte = XUartPs_RecvByte(XPAR_XUARTPS_0_BASEADDR); // read UART
 
-    		if (48 <= rx_byte && 57 >= rx_byte) {
-    			ram_position *= 10;
-    		    ram_position += (rx_byte - 48);
-    		} else if (rx_byte == 104) { //'h'
-    			ram_valid = 0;
-    			print_help();
-    		} else if (13 == rx_byte || 10 == rx_byte) { //'\r' or '\n'
-    			break;
-    		} else {
-    			ram_valid = 0;
-    		}
-    	}
+			if (48 <= rx_byte && 57 >= rx_byte) {
+				ram_position *= 10;
+				ram_position += (rx_byte - 48);
+			} else if (rx_byte == 104) { //'h'
+				ram_valid = 0;
+				print_help();
+			} else if (13 == rx_byte || 10 == rx_byte) { //'\r' or '\n'
+				break;
+			} else {
+				ram_valid = 0;
+			}
+		}
 
-    	uint8_t cnt = 0;
+		uint8_t cnt = 0;
 
-    	if (ADDR_LEN > ram_position && 1 == ram_valid) {
+		if (ADDR_LEN > ram_position && 1 == ram_valid) {
 
-    		char str[100];
+			char str[100];
 
 			sprintf(str, "Getting value for %d\n", ram_position);
 
 			print(str);
 
-    		while(++cnt < 20) {
-    			usleep(250000);
+			while(++cnt < 20) {
+				usleep(250000);
 
 				int16_t tempInt = BRAM(ram_position);
 
@@ -130,27 +120,39 @@ int main()
 
 			}
 
-    	}
+		}
+	}
+}
 
+int main()
+{
+    init_platform();
 
+    print("\n\rInitializing..\n\r");
 
+    sleep(1);
 
+	ucAXIInit();
 
-    	/*
-		for(int i = 0; i < NUM_INPUTS; i++){
-			// concatenate 8-bit input messages into 32-bit values
-			tempInt = ((BufferPtr_rx[i*4+3]<<24) | (BufferPtr_rx[i*4+2]<<16) | (BufferPtr_rx[i*4+1]<<8) | BufferPtr_rx[i*4]);
-			// prints current values in BRAM
-			tempFloat = *((float *)&tempInt); 	// int bits to float
-			char buffer2[10];
-			sprintf(buffer2, "%f", tempFloat);
-			xil_printf("BRAM[%d]:", i);
-			xil_printf(buffer2);
-			print("\n\r");
+	xuartps_init();
 
-			BRAM(i) = tempInt; // write to BRAM
-		}*/
-    }
+	//debug();
+	int prev_nn_res = 0;
+
+	while(1) {
+		int nn_res = XGpio_DiscreteRead(&Gpio_nn, GPIO_CHANNEL);
+
+		if (nn_res != prev_nn_res && nn_res != 0) {
+
+			char str[100];
+
+			sprintf(str, "Detected category %d\n", nn_res);
+
+			print(str);
+		}
+
+		prev_nn_res = nn_res;
+	}
 
     print("Shutting down");
     cleanup_platform();
@@ -170,6 +172,18 @@ uint8_t 	ucAXIInit(){
 	if (x_status != XST_SUCCESS) {
 		return XST_FAILURE;
 	}
+
+
+	/* Initialize the GPIO driver */
+	x_status = XGpio_Initialize(&Gpio_nn, GPIO_DEVICE_ID);
+	if (x_status != XST_SUCCESS) {
+		xil_printf("Gpio Initialization Failed\r\n");
+		return XST_FAILURE;
+	}
+
+	/* Set the direction for all signals as inputs*/
+	XGpio_SetDataDirection(&Gpio_nn, GPIO_CHANNEL, ~0x00);
+
 	return XST_SUCCESS;
 }
 
