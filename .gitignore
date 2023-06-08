@@ -4,6 +4,6 @@ SW/vitis_project/
 
 **.vscode
 
-**lstm_implementation/
+**hls_project/
 
 HDL/custom_ip/*/

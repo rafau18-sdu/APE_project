@@ -145,6 +145,8 @@ architecture Behavioral of imu_bram2uart is
     signal delay_cnt        : natural range 0 to 2**12 - 1 :=  0;
     
     signal dummy_cnt : natural range 0 to 1 := 0;
+    
+    signal start_end_cnt : natural range 0 to 2 := 0;
 begin
 
     uart_clk : clk_divider
@@ -189,6 +191,7 @@ begin
                         current_state <= SEND_START_BYTE;
                         bram_addr_cnt <= 0;
                         bram_delay_cnt <= 0;
+                        start_end_cnt <= 0;
                     end if;
                 
                 when SET_BRAM =>
@@ -222,7 +225,7 @@ begin
                     delay_cnt <= 0;
                     current_state <= WAIT_SEND_END;
                     new_data_uart <= '1';
-                
+                    
                 when SEND_BRAM =>
                 
                     if byte_cnt /= 2 then
@@ -238,6 +241,7 @@ begin
                     else
                         if bram_addr_cnt = bram_len then
                             current_state <= SEND_END_BYTE;
+                            start_end_cnt <= 0;
                         else 
                             current_state <= SET_BRAM;
                         end if;
@@ -247,6 +251,7 @@ begin
                     if delay_cnt = 2 then
                         new_data_uart <= '0';
                     end if;
+                    
                 
                     cnt_wait(   delay_cnt => delay_cnt,
                                 delay => send_delay,
@@ -255,34 +260,57 @@ begin
                                 inc_cnt => byte_cnt,
                                 current_state => current_state,
                                 new_state => SEND_BRAM);
+                               
                                 
                 when WAIT_SEND_START =>
                 
                     if delay_cnt = 2 then
                         new_data_uart <= '0';
                     end if;
-                
-                    cnt_wait(   delay_cnt => delay_cnt,
+                    
+                    if start_end_cnt = 0 then
+
+                        cnt_wait(   delay_cnt => delay_cnt,
+                                    delay => send_delay,
+                                    clk_div_cnt => clk_div_cnt,
+                                    clk_div => clk_div,
+                                    inc_cnt => start_end_cnt,
+                                    current_state => current_state,
+                                    new_state => SEND_START_BYTE);
+                    else
+                        cnt_wait(   delay_cnt => delay_cnt,
                                 delay => send_delay,
                                 clk_div_cnt => clk_div_cnt,
                                 clk_div => clk_div,
                                 inc_cnt => dummy_cnt,
                                 current_state => current_state,
                                 new_state => SET_BRAM);
+                    end if;
                                 
                 when WAIT_SEND_END =>
                 
                     if delay_cnt = 2 then
                         new_data_uart <= '0';
                     end if;
-                
-                    cnt_wait(   delay_cnt => delay_cnt,
+                                
+                    if start_end_cnt = 0 then
+
+                        cnt_wait(   delay_cnt => delay_cnt,
+                                    delay => send_delay,
+                                    clk_div_cnt => clk_div_cnt,
+                                    clk_div => clk_div,
+                                    inc_cnt => start_end_cnt,
+                                    current_state => current_state,
+                                    new_state => SEND_END_BYTE);
+                    else
+                        cnt_wait(   delay_cnt => delay_cnt,
                                 delay => send_delay,
                                 clk_div_cnt => clk_div_cnt,
                                 clk_div => clk_div,
                                 inc_cnt => dummy_cnt,
                                 current_state => current_state,
-                                new_state => START);                            
+                                new_state => START);
+                    end if;                         
 
                 when others =>
                     NULL;

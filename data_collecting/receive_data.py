@@ -5,17 +5,29 @@ import serial
 import struct
 import argparse
 from pathlib import Path
+import uuid
 
 from collections import deque
+from itertools import islice
+
+def check_file_or_directory(path):
+    if os.path.isfile(path):
+        return path
+    elif os.path.isdir(path):
+        return os.path.join(path, str(uuid.uuid4()) + ".txt")
+    else:
+        return ""
 
 
-def receive_data(port: str, baud: int, output_path: str | Path, data_len: int=14):
+def receive_data(port: str, baud: int, output_path: str | Path, data_len: int=16):
    
-    print(f"Output path: {output_path}")
+    path = check_file_or_directory(output_path)
+    
+    print(f"{path = }")
 
     # Delete output file if it already exists
-    if os.path.exists(output_path):
-        os.remove(output_path)
+    if os.path.exists(path):
+        os.remove(path)
 
     ser_rx = serial.Serial(port, baud,
                         serial.EIGHTBITS,
@@ -28,34 +40,44 @@ def receive_data(port: str, baud: int, output_path: str | Path, data_len: int=14
     # Find first package
     circ_buffer = deque(maxlen=data_len)
     
-    while True:
-        read_data = ser_rx.read()
-        
-        circ_buffer.append(read_data)
-        
-        #print(read_data)
-        
-        if len(circ_buffer) == data_len:
-            if circ_buffer[0] == bytes([0x80]) and circ_buffer[-1] == bytes([0xFE]):
-                break
     
     # Write data to file
-    with open(output_path, 'w') as ofile:
-
+    with open(path, 'w') as ofile:
+    
         while True:
-            read_data = ser_rx.read(data_len)
-            if read_data[0] == 0x80 and read_data[-1] == 0xFE:  # check if start and stop bytes are correct
-                values = struct.unpack('<6h', read_data[1:-1])  # unpack the 12 data bytes into 6 16-bit integers
+            read_data = ser_rx.read()
+            
+            circ_buffer.append(read_data)
+            
+            #print(read_data)
+            
+            # When buffer is full
+            if len(circ_buffer) == data_len:
                 
-                #print(values)
+                # Are stop bytes correct?
+                if (circ_buffer[-1] == bytes([0xFE])
+                    and circ_buffer[-2] == bytes([0xFE])):
+                    
+                    values = struct.unpack('<6h', b"".join(islice(circ_buffer,2,14)))  # unpack the 12 data bytes into 6 16-bit integers
                 
-                for value in values:
-                    ofile.write(str(value) + ',')
-                
-                ofile.write("\n")
-            else:
-                print("Start/Stop did not match")
-                break
+                    #print(values)
+                    
+                    # Find value from bottom
+                    if (circ_buffer[0] == bytes([0x80]) 
+                        and circ_buffer[1] == bytes([0x80])):
+                        ofile.write(str(1) + ',')
+                    elif (circ_buffer[0] == bytes([0x00]) 
+                        and circ_buffer[1] == bytes([0x00])):
+                        ofile.write(str(0) + ',')
+                    
+                    # Data is not valid
+                    else:
+                        continue
+                    
+                    for value in values:
+                        ofile.write(str(value) + ',')
+                    
+                    ofile.write("\n")
 
     ser_rx.close()
 
@@ -67,7 +89,7 @@ if __name__ == "__main__":
     # Run argument parser
     parser = argparse.ArgumentParser(description="Program used to receive a data over UART")
     parser.add_argument('data_path', help="Path to save data")
-    parser.add_argument('-l', '--data_len', required=False, default=14, help="Number of bytes to receive")
+    parser.add_argument('-l', '--data_len', required=False, default=16, help="Number of bytes to receive")
     parser.add_argument('-p', '--port', required=False, help="Serial port to use for receiving")
     parser.add_argument('-b', '--baud', required=False, default=115200, help="Baud rate of transmit port - defaults to 115200")
 
